@@ -9,6 +9,18 @@ const supabase = supabase.createClient(
   "sb_publishable_tKK0t8u5AtQZabSu6IQnzA_vbLnW88H"
 );
 </script>
+<script>
+async function testSupabase() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*');
+
+  console.log("DATEN:", data);
+  console.log("FEHLER:", error);
+}
+
+testSupabase();
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hertz-Partnerportal</title>
