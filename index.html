@@ -287,7 +287,10 @@ const defaultState = {
 };
 
 let state = structuredClone(defaultState);
-
+loadState().then(data => {
+  state = data;
+  renderAll();
+});
 async function loadState(){
   const { data, error } = await client
     .from('orders')
