@@ -286,7 +286,7 @@ const defaultState = {
   currentOrderId: null
 };
 
-let state = loadState();
+let state = structuredClone(defaultState);
 
 async function loadState(){
   const { data, error } = await client
