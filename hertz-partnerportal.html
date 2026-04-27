@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hertz-Partnerportal</title>
+  <style>
+    :root{
+      --bg:#f3f9ff;
+      --card:#ffffff;
+      --primary:#3ba4ff;
+      --primary-dark:#1976d2;
+      --accent:#20b486;
+      --text:#1f2d3d;
+      --muted:#6b7a90;
+      --border:#d9ebfb;
+      --warning:#f59e0b;
+      --success:#10b981;
+      --shadow:0 10px 30px rgba(29,93,155,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:linear-gradient(135deg,#eef7ff 0%,#f9fcff 45%,#edf8ff 100%);
+    }
+    .app{
+      display:grid;
+      grid-template-columns:270px 1fr;
+      gap:20px;
+      min-height:100vh;
+      padding:20px;
+    }
+    .sidebar,.panel,.card{
+      background:rgba(255,255,255,.92);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      border-radius:32px;
+    }
+    .sidebar{padding:20px; position:sticky; top:20px; height:calc(100vh - 40px)}
+    .brand{
+      display:flex; gap:12px; align-items:center; margin-bottom:24px;
+    }
+    .brand-badge{
+      width:46px;height:46px;border-radius:16px;background:var(--primary);
+      color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;
+      box-shadow:0 8px 20px rgba(59,164,255,.35);
+    }
+    .muted{color:var(--muted)}
+    .nav-btn{
+      width:100%; text-align:left; border:none; cursor:pointer;
+      padding:14px 16px; border-radius:18px; background:transparent; margin-bottom:8px;
+      font-size:15px; color:var(--text);
+    }
+    .nav-btn.active{background:var(--primary); color:#fff; font-weight:700}
+    .nav-btn:hover{background:#eef7ff}
+    .nav-btn.active:hover{background:var(--primary)}
+    .sidebar-note{
+      margin-top:20px; padding:16px; border-radius:24px; background:#eef7ff; border:1px solid var(--border);
+      font-size:14px; line-height:1.5;
+    }
+    .content{display:flex; flex-direction:column; gap:20px}
+    .panel{padding:22px 24px}
+    .panel-head{display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap}
+    .search-row{display:flex; gap:10px; flex-wrap:wrap}
+    input, select, textarea{
+      border:1px solid var(--border); border-radius:18px; padding:12px 14px; font-size:14px;
+      outline:none; width:100%; background:#fff;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .search{min-width:280px}
+    .btn{
+      border:none; cursor:pointer; border-radius:18px; padding:12px 16px; font-weight:700; font-size:14px;
+    }
+    .btn-primary{background:var(--primary); color:#fff}
+    .btn-primary:hover{background:var(--primary-dark)}
+    .btn-success{background:var(--accent); color:#fff}
+    .btn-outline{background:#fff; border:1px solid var(--border); color:var(--text)}
+    .btn-warning{background:#fff6e6; color:#996300; border:1px solid #f6d48c}
+    .stats{display:grid; grid-template-columns:repeat(6,1fr); gap:14px}
+    .card{padding:18px}
+    .stat-value{font-size:28px; font-weight:700; margin:8px 0 4px}
+    .grid-2{display:grid; grid-template-columns:1.35fr .95fr; gap:20px}
+    .order{
+      border:1px solid var(--border); border-radius:24px; padding:18px; margin-bottom:14px; background:#fff;
+    }
+    .row{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap}
+    .badge{display:inline-block; padding:8px 12px; border-radius:999px; font-size:12px; font-weight:700}
+    .status-Offen{background:#e3f2ff; color:#1f78c8}
+    .status-In\ Verhandlung{background:#fff3d6; color:#9a6700}
+    .status-Vergeben{background:#dbf7ec; color:#06754f}
+    .status-Abgeschlossen{background:#eceff3; color:#506072}
+    .meta{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:16px 0; font-size:14px}
+    .info-box{padding:14px; border-radius:18px; background:#f5fbff; border:1px solid var(--border); font-size:14px; line-height:1.5}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .timeline-item{
+      padding:14px; border-radius:18px; background:#f8fbff; border:1px solid var(--border); margin-bottom:10px;
+    }
+    .calendar-day{margin-bottom:18px}
+    .tiny{font-size:12px}
+    .hidden{display:none}
+    .two-col{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    .msg{
+      padding:14px; border:1px solid var(--border); border-radius:18px; margin-bottom:10px;
+    }
+    .tabs{display:flex; gap:10px; margin-bottom:16px}
+    .tab{padding:10px 14px; border-radius:14px; cursor:pointer; border:1px solid var(--border); background:#eef7ff}
+    .tab.active{background:var(--primary); color:#fff; font-weight:700}
+    .footer-note{font-size:13px; color:var(--muted); margin-top:10px}
+    @media (max-width:1200px){
+      .stats{grid-template-columns:repeat(3,1fr)}
+      .grid-2{grid-template-columns:1fr}
+    }
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:static; height:auto}
+      .meta,.two-col,.stats{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:640px){
+      .meta,.two-col,.stats{grid-template-columns:1fr}
+      .search{min-width:100%}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-badge">H</div>
+      <div>
+        <div style="font-weight:700">Hertz-Partnerportal</div>
+        <div class="muted tiny">Partnernetzwerk & Auftragsvergabe</div>
+      </div>
+    </div>
+
+    <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
+    <button class="nav-btn" data-page="createOrder">Auftrag vergeben</button>
+    <button class="nav-btn" data-page="messages">Nachrichten</button>
+    <button class="nav-btn" data-page="admin">Admin-Kalender</button>
+    <button class="nav-btn" data-page="register">Registrierung</button>
+
+    <div class="sidebar-note">
+      <strong>Admin-Hinweis</strong><br>
+      Registrierungen, Interessebekundungen, Vergaben, Nachrichten und Statusänderungen werden protokolliert.
+    </div>
+  </aside>
+
+  <main class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h1 style="margin:0 0 6px">Hertz-Partnerportal</h1>
+          <div class="muted">Online-Version als direkt hochladbare Web-App</div>
+        </div>
+        <div class="search-row">
+          <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
+          <button class="btn btn-primary" onclick="showPage('orders')">Aufträge finden</button>
+          <button class="btn btn-success" onclick="showPage('createOrder')">Auftrag vergeben</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-dashboard" class="page">
+      <div class="stats" id="stats"></div>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="card">
+          <h2 style="margin-top:0">Kachel: Auftragsuchende sehen annoncierte Aufträge</h2>
+          <div class="muted" style="margin-bottom:14px">Partner können offene Aufträge durchsuchen, Interesse bekunden und den Auftraggeber kontaktieren.</div>
+          <div id="dashboardOrders"></div>
+          <button class="btn btn-outline" onclick="showPage('orders')">Alle Aufträge ansehen</button>
+        </div>
+        <div class="card">
+          <h2 style="margin-top:0">Admin-Verlauf im Kalenderstil</h2>
+          <div class="muted" style="margin-bottom:14px">Alle Aktivitäten werden chronologisch angezeigt.</div>
+          <div id="dashboardActivities"></div>
+          <button class="btn btn-outline" onclick="showPage('admin')">Zur Kalenderansicht</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-orders" class="page hidden">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2 style="margin-top:0">Aufträge entdecken</h2>
+            <div class="muted">Business-Version mit Statuslogik, Interessentenliste und direkter Vergabe an Partner.</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <input id="orderSearch" placeholder="Aufträge durchsuchen" style="width:240px">
+            <select id="cityFilter" style="width:190px"></select>
+          </div>
+        </div>
+        <div id="ordersList" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <section id="page-createOrder" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Neuen Auftrag einstellen</h2>
+        <div class="muted" style="margin-bottom:14px">Preisangabe, Auftragsvolumen und Ausführungsort direkt erfassen.</div>
+        <div class="two-col">
+          <input id="newTitle" placeholder="Auftragstitel">
+          <input id="newCity" placeholder="Ausführungsort">
+          <input id="newPrice" placeholder="Preis in Euro">
+          <input id="newVolume" placeholder="Auftragsvolumen">
+          <input id="newDate" type="date">
+          <input id="newAnnouncer" placeholder="Annoncierender Partner / Firma" value="Heinrich Hertz Elektrotechnik GmbH">
+        </div>
+        <div style="margin-top:14px">
+          <textarea id="newDescription" placeholder="Beschreibung"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-success" onclick="createOrder()">Auftrag veröffentlichen</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-messages" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Schriftverkehr</h2>
+        <div class="muted" style="margin-bottom:14px">Kommunikation bleibt möglich, die Vergabe läuft zusätzlich strukturiert über Interessenten und Zuweisung.</div>
+        <div class="tabs">
+          <div class="tab active" data-tab="chat">Chat</div>
+          <div class="tab" data-tab="adminview">Admin-Einsicht</div>
+        </div>
+        <div id="messages-chat"></div>
+        <div id="messages-adminview" class="hidden"></div>
+      </div>
+    </section>
+
+    <section id="page-admin" class="page hidden">
+      <div id="calendarWrap"></div>
+    </section>
+
+    <section id="page-register" class="page hidden">
+      <div class="card" style="max-width:760px">
+        <h2 style="margin-top:0">Partner-Registrierung</h2>
+        <div class="muted" style="margin-bottom:14px">Neue Nutzer können sich registrieren. Die Aktivität wird protokolliert.</div>
+        <div class="two-col">
+          <input id="regName" placeholder="Unternehmen / Ansprechpartner">
+          <input id="regEmail" placeholder="E-Mail-Adresse">
+          <input id="regPassword" type="password" placeholder="Passwort">
+          <input id="regRole" placeholder="Rolle / Partnerart">
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="registerPartner()">Registrieren</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = "hertz_partnerportal_v1";
+
+const defaultState = {
+  orders: [
+    {id:1,title:"DGUV V3 Prüfauftrag – Filialnetz",city:"Hamburg",price:4500,volume:"800 Geräte",date:"2026-04-28",announcer:"Heinrich Hertz Elektrotechnik GmbH",status:"Offen",description:"Prüfung ortsveränderlicher Betriebsmittel in mehreren Filialen.",interestedPartners:["Nordlicht Prüfservice","Elektro Team Hanse"],assignedPartner:""},
+    {id:2,title:"Prüfung elektrische Betriebsmittel – Bürokomplex",city:"München",price:2800,volume:"420 Geräte",date:"2026-05-03",announcer:"Nordlicht Prüfservice",status:"In Verhandlung",description:"Unterstützung bei der DGUV V3 Prüfung in einem Verwaltungsgebäude.",interestedPartners:["Hertz Service Süd"],assignedPartner:""},
+    {id:3,title:"Anlagenprüfung – Logistikstandort",city:"Frankfurt",price:6200,volume:"1.150 Geräte",date:"2026-05-07",announcer:"Main Elektro Partner",status:"Vergeben",description:"Prüfung von Geräten und ausgewählten ortsfesten Anlagen am Standort.",interestedPartners:["Heinrich Hertz Elektrotechnik GmbH","Prüfservice Rhein-Main"],assignedPartner:"Heinrich Hertz Elektrotechnik GmbH"},
+    {id:4,title:"Wiederholungsprüfung – Einzelhandel",city:"Köln",price:3100,volume:"530 Geräte",date:"2026-05-12",announcer:"Elektro West Partner",status:"Abgeschlossen",description:"Regelmäßige Sicherheitsprüfung an mehreren Einzelhandelsflächen.",interestedPartners:["Hertz Service Köln"],assignedPartner:"Hertz Service Köln"}
+  ],
+  activities: [
+    {id:1,date:"2026-04-23",time:"08:30",type:"Registrierung",user:"Baran Alagöz",details:"Neuer Partner registriert und Profil vervollständigt."},
+    {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg mit Preisangabe und Volumen veröffentlicht."},
+    {id:3,date:"2026-04-24",time:"11:40",type:"Interesse bekundet",user:"Nordlicht Prüfservice",details:"Partner hat Interesse an einem Auftrag in Hamburg bekundet."},
+    {id:4,date:"2026-04-25",time:"14:20",type:"Statusänderung",user:"Admin",details:"Auftrag Frankfurt auf 'Vergeben' gesetzt."},
+    {id:5,date:"2026-04-25",time:"15:10",type:"Vergabe",user:"Main Elektro Partner",details:"Auftrag Frankfurt wurde an Heinrich Hertz Elektrotechnik GmbH vergeben."}
+  ],
+  messages: [
+    {id:1,sender:"Nordlicht Prüfservice",recipient:"Heinrich Hertz Elektrotechnik GmbH",orderRef:"DGUV V3 Prüfauftrag – Filialnetz",body:"Guten Tag, wir könnten den Auftrag in Hamburg übernehmen. Bitte senden Sie die genauen Einsatzdaten.",time:"09:45"},
+    {id:2,sender:"Heinrich Hertz Elektrotechnik GmbH",recipient:"Nordlicht Prüfservice",orderRef:"DGUV V3 Prüfauftrag – Filialnetz",body:"Vielen Dank. Wir senden Ihnen heute noch die Rahmendaten und Ansprechpartner vor Ort.",time:"10:05"}
+  ],
+  partners: 24,
+  currentOrderId: null
+};
+
+let state = loadState();
+
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return structuredClone(defaultState);
+  try { return JSON.parse(raw); } catch(e){ return structuredClone(defaultState); }
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function nowTime(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+function todayDate(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function addActivity(type,user,details){
+  state.activities.unshift({id:Date.now(),date:todayDate(),time:nowTime(),type,user,details});
+  saveState();
+}
+
+function showPage(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+  document.getElementById("page-"+page).classList.remove("hidden");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
+  render();
+}
+document.querySelectorAll(".nav-btn").forEach(btn => btn.onclick = () => showPage(btn.dataset.page));
+
+function statusClass(status){
+  return "status-"+status.replaceAll(" ", "\\ ");
+}
+function statsData(){
+  return [
+    ["Offene Aufträge", state.orders.filter(o=>o.status==="Offen").length, "Aktuell annoncierte Aufträge"],
+    ["In Verhandlung", state.orders.filter(o=>o.status==="In Verhandlung").length, "Mit Interessenten"],
+    ["Vergeben", state.orders.filter(o=>o.status==="Vergeben").length, "An Partner zugeteilt"],
+    ["Abgeschlossen", state.orders.filter(o=>o.status==="Abgeschlossen").length, "Erledigte Aufträge"],
+    ["Nachrichten", state.messages.length, "Gesamter Schriftverkehr"],
+    ["Aktivitäten", state.activities.length, "Für Admin protokolliert"]
+  ];
+}
+function renderStats(){
+  const wrap = document.getElementById("stats");
+  wrap.innerHTML = statsData().map(([title,value,sub]) => `
+    <div class="card">
+      <div class="muted tiny">${title}</div>
+      <div class="stat-value">${value}</div>
+      <div class="muted tiny">${sub}</div>
+    </div>
+  `).join("");
+}
+function getFilteredOrders(){
+  const global = document.getElementById("globalSearch").value.toLowerCase();
+  const search = document.getElementById("orderSearch")?.value.toLowerCase() || "";
+  const city = document.getElementById("cityFilter")?.value || "all";
+  return state.orders.filter(order => {
+    const hay = [order.title, order.city, order.announcer, order.description, order.assignedPartner, ...(order.interestedPartners||[])].join(" ").toLowerCase();
+    const s = !global || hay.includes(global);
+    const s2 = !search || hay.includes(search);
+    const s3 = city==="all" || order.city===city;
+    return s && s2 && s3;
+  });
+}
+function orderCard(order){
+  return `
+  <div class="order">
+    <div class="row">
+      <div>
+        <div style="font-size:18px;font-weight:700">${order.title}</div>
+        <div class="muted" style="margin-top:4px">${order.description}</div>
+      </div>
+      <span class="badge ${statusClass(order.status)}">${order.status}</span>
+    </div>
+    <div class="meta">
+      <div>📍 ${order.city}</div>
+      <div>💶 ${Number(order.price).toLocaleString("de-DE")} €</div>
+      <div>📦 ${order.volume}</div>
+      <div>📅 ${order.date}</div>
+    </div>
+    <div class="info-box">
+      <div>Annonciert von: <strong>${order.announcer}</strong></div>
+      <div>Interessenten: <strong>${order.interestedPartners.length ? order.interestedPartners.join(", ") : "Noch keine"}</strong></div>
+      <div>Vergebener Partner: <strong>${order.assignedPartner || "Noch nicht vergeben"}</strong></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="expressInterest(${order.id})">Interesse bekunden</button>
+      <button class="btn btn-outline" onclick="openMessages(${order.id})">Nachricht öffnen</button>
+      ${order.interestedPartners.length > 0 && !["Vergeben","Abgeschlossen"].includes(order.status)
+        ? `<button class="btn btn-success" onclick="assignOrder(${order.id}, '${escapeQuotes(order.interestedPartners[0])}')">Auftrag vergeben</button>` : ""}
+      ${order.status==="Vergeben"
+        ? `<button class="btn btn-outline" onclick="completeOrder(${order.id})">Als abgeschlossen markieren</button>` : ""}
+    </div>
+  </div>`;
+}
+function escapeQuotes(s){ return (s||"").replaceAll("'", "\\'"); }
+
+function renderOrders(){
+  const filtered = getFilteredOrders();
+  document.getElementById("ordersList").innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+  document.getElementById("dashboardOrders").innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+}
+function renderCityFilter(){
+  const cities = [...new Set(state.orders.map(o=>o.city))];
+  const sel = document.getElementById("cityFilter");
+  const current = sel.value || "all";
+  sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${c}">${c}</option>`).join("");
+  if([...sel.options].some(o=>o.value===current)) sel.value = current;
+}
+function activityBadge(type){
+  const map = {
+    "Registrierung":"#dbf7ec|#06754f",
+    "Auftrag annonciert":"#e3f2ff|#1f78c8",
+    "Nachricht":"#f0e8ff|#6d45ad",
+    "Statusänderung":"#fff3d6|#9a6700",
+    "Interesse bekundet":"#dff8ff|#0c7d96",
+    "Vergabe":"#dbf7ec|#06754f"
+  };
+  const [bg,col] = (map[type]||"#eef2f7|#506072").split("|");
+  return `<span class="badge" style="background:${bg};color:${col}">${type}</span>`;
+}
+function renderDashboardActivities(){
+  document.getElementById("dashboardActivities").innerHTML = state.activities.slice(0,5).map(a => `
+    <div class="timeline-item">
+      <div class="row">
+        <strong>${a.user}</strong>
+        <span class="muted tiny">${a.date} · ${a.time}</span>
+      </div>
+      <div style="margin-top:8px">${activityBadge(a.type)}</div>
+      <div class="muted" style="margin-top:10px">${a.details}</div>
+    </div>
+  `).join("");
+}
+function renderCalendar(){
+  const grouped = {};
+  state.activities.forEach(a => {
+    if(!grouped[a.date]) grouped[a.date] = [];
+    grouped[a.date].push(a);
+  });
+  const dates = Object.keys(grouped).sort().reverse();
+  document.getElementById("calendarWrap").innerHTML = dates.map(date => `
+    <div class="card calendar-day">
+      <h2 style="margin-top:0">${date}</h2>
+      <div class="muted" style="margin-bottom:14px">Kalenderansicht aller Aktivitäten</div>
+      ${grouped[date].map(a => `
+        <div class="timeline-item">
+          <div class="row">
+            <div style="min-width:80px"><strong>${a.time}</strong></div>
+            <div>${activityBadge(a.type)}</div>
+          </div>
+          <div style="margin-top:10px"><strong>${a.user}</strong></div>
+          <div class="muted" style="margin-top:4px">${a.details}</div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
+function renderMessages(){
+  const wrap1 = document.getElementById("messages-chat");
+  const wrap2 = document.getElementById("messages-adminview");
+  const currentOrder = state.orders.find(o => o.id===state.currentOrderId);
+  const header = currentOrder ? `
+    <div class="info-box" style="margin-bottom:14px">
+      <div class="muted tiny">Aktueller Bezug</div>
+      <div><strong>${currentOrder.title}</strong></div>
+      <div class="muted">Auftraggeber: ${currentOrder.announcer}</div>
+    </div>` : "";
+  const msgs = state.messages.map(m => `
+    <div class="msg">
+      <div class="row">
+        <strong>${m.sender} → ${m.recipient}</strong>
+        <span class="muted tiny">${m.time}</span>
+      </div>
+      <div style="margin-top:6px;color:#1f78c8;font-size:13px">Bezug: ${m.orderRef}</div>
+      <div style="margin-top:10px">${m.body}</div>
+    </div>
+  `).join("");
+  const composer = `
+    <div class="card" style="padding:0;border:none;box-shadow:none;background:transparent">
+      <textarea id="messageBody" placeholder="Nachricht schreiben..."></textarea>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="sendMessage()">Nachricht senden</button>
+      </div>
+    </div>`;
+  wrap1.innerHTML = header + msgs + composer;
+  wrap2.innerHTML = msgs || `<div class="muted">Noch keine Nachrichten vorhanden.</div>`;
+}
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("messages-chat").classList.toggle("hidden", tab.dataset.tab!=="chat");
+    document.getElementById("messages-adminview").classList.toggle("hidden", tab.dataset.tab!=="adminview");
+  };
+});
+
+function render(){
+  renderStats();
+  renderCityFilter();
+  renderOrders();
+  renderDashboardActivities();
+  renderCalendar();
+  renderMessages();
+  saveState();
+}
+
+function expressInterest(orderId){
+  const order = state.orders.find(o=>o.id===orderId);
+  if(!order) return;
+  const partnerName = "Heinrich Hertz Elektrotechnik GmbH";
+  if(!order.interestedPartners.includes(partnerName)) order.interestedPartners.push(partnerName);
+  if(order.status==="Offen") order.status = "In Verhandlung";
+  addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`);
+  render();
+  alert("Interesse wurde eingetragen.");
+}
+function assignOrder(orderId, partnerName){
+  const order = state.orders.find(o=>o.id===orderId);
+  if(!order) return;
+  order.assignedPartner = partnerName;
+  order.status = "Vergeben";
+  addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`);
+  addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Vergeben' gesetzt.`);
+  render();
+  alert("Auftrag wurde vergeben.");
+}
+function completeOrder(orderId){
+  const order = state.orders.find(o=>o.id===orderId);
+  if(!order) return;
+  order.status = "Abgeschlossen";
+  addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`);
+  render();
+  alert("Auftrag wurde als abgeschlossen markiert.");
+}
+function openMessages(orderId){
+  state.currentOrderId = orderId;
+  const order = state.orders.find(o=>o.id===orderId);
+  if(order) addActivity("Nachricht", "Interessent", `Kontaktansicht für den Auftrag '${order.title}' geöffnet.`);
+  showPage("messages");
+}
+function sendMessage(){
+  const body = document.getElementById("messageBody").value.trim();
+  if(!body) return alert("Bitte zuerst eine Nachricht eingeben.");
+  const order = state.orders.find(o=>o.id===state.currentOrderId);
+  state.messages.push({
+    id: Date.now(),
+    sender: "Interessent",
+    recipient: order ? order.announcer : "Auftraggeber",
+    orderRef: order ? order.title : "Allgemein",
+    body,
+    time: nowTime()
+  });
+  addActivity("Nachricht", "Interessent", `Neue Nachricht zum Auftrag '${order ? order.title : "Allgemein"}' gesendet.`);
+  render();
+}
+function createOrder(){
+  const title = document.getElementById("newTitle").value.trim();
+  const city = document.getElementById("newCity").value.trim();
+  const price = document.getElementById("newPrice").value.trim();
+  const volume = document.getElementById("newVolume").value.trim();
+  const date = document.getElementById("newDate").value;
+  const announcer = document.getElementById("newAnnouncer").value.trim() || "Heinrich Hertz Elektrotechnik GmbH";
+  const description = document.getElementById("newDescription").value.trim() || "Neuer annoncierter Auftrag auf der Plattform.";
+  if(!title || !city || !price || !volume || !date) return alert("Bitte alle Pflichtfelder ausfüllen.");
+  state.orders.unshift({
+    id: Date.now(), title, city, price:Number(price), volume, date, announcer, status:"Offen", description,
+    interestedPartners:[], assignedPartner:""
+  });
+  addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
+  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => document.getElementById(id).value = "");
+  render();
+  showPage("orders");
+}
+function registerPartner(){
+  const name = document.getElementById("regName").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value.trim();
+  const role = document.getElementById("regRole").value.trim();
+  if(!name || !email || !password) return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
+  state.partners += 1;
+  addActivity("Registrierung", name, `Neuer Partner registriert${role ? " ("+role+")" : ""}.`);
+  ["regName","regEmail","regPassword","regRole"].forEach(id => document.getElementById(id).value = "");
+  render();
+  showPage("dashboard");
+  alert("Partner wurde registriert.");
+}
+document.getElementById("globalSearch").addEventListener("input", render);
+document.getElementById("orderSearch").addEventListener("input", render);
+document.getElementById("cityFilter").addEventListener("change", render);
+
+render();
+</script>
+</body>
+</html>
