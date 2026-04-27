@@ -289,7 +289,7 @@ const defaultState = {
 let state = structuredClone(defaultState);
 loadState().then(data => {
   state = data;
-  renderAll();
+  render();
 });
 async function loadState(){
   const { data, error } = await client
