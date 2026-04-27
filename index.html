@@ -288,7 +288,7 @@ const defaultState = {
 
 let state = structuredClone(defaultState);
 async function loadFromSupabase() {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('orders')
     .select('*');
 
