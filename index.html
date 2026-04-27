@@ -288,6 +288,7 @@ const defaultState = {
 
 let state = structuredClone(defaultState);
 loadState().then(data => {
+  console.log("SUPABASE DATEN:", data);
   state = data;
   render();
 });
