@@ -288,10 +288,20 @@ const defaultState = {
 
 let state = loadState();
 
-function loadState(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw) return structuredClone(defaultState);
-  try { return JSON.parse(raw); } catch(e){ return structuredClone(defaultState); }
+async function loadState(){
+  const { data, error } = await client
+    .from('orders')
+    .select('*');
+
+  if(error){
+    console.error("Fehler beim Laden:", error);
+    return defaultState;
+  }
+
+  return {
+    ...defaultState,
+    orders: data || []
+  };
 }
 function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
