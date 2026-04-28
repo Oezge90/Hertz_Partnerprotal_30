@@ -585,9 +585,8 @@ async function createOrder(){
   const price = document.getElementById("newPrice").value.trim();
   const volume = document.getElementById("newVolume").value.trim();
   const date = document.getElementById("newDate").value;
-  const announcer = document.getElementById("newAnnouncer").value.trim() || "Heinrich Hertz Elektrotechnik GmbH";
   const description = document.getElementById("newDescription").value.trim() || "Neuer annoncierter Auftrag auf der Plattform.";
-
+const announcer = document.getElementById("newAnnouncer").value.trim() || "Heinrich Hertz Elektrotechnik GmbH";
   if(!title || !city || !price || !volume || !date) {
     return alert("Bitte alle Pflichtfelder ausfüllen.");
   }
@@ -600,7 +599,7 @@ async function createOrder(){
       price: Number(price),
       volume,
       date,
-      announcer,
+      
       description,
       status: "Offen"
     }])
