@@ -417,6 +417,13 @@ function orderCard(order){
       ${order.status==="Vergeben"
         ? `<button class="btn btn-outline" onclick="completeOrder(${order.id})">Als abgeschlossen markieren</button>` : ""}
     </div>
+    <div class="chat-box">
+  <div>Nachrichten:</div>
+  <div id="messages-${order.id}"></div>
+
+  <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
+  <button onclick="handleSend('${order.id}')">Senden</button>
+</div>
   </div>`;
 }
 function escapeQuotes(s){ return (s||"").replaceAll("'", "\\'"); }
