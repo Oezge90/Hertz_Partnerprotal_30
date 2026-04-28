@@ -295,10 +295,23 @@ async function loadFromSupabase() {
   console.log("SUPABASE ORDERS:", data);
   console.log("FEHLER:", error);
 
-  if (data) {
-    state.orders = data;
-    render();
-  }
+  if (error) return;
+
+  state.orders = (data || []).map(order => ({
+    id: order.id,
+    title: order.title || "Ohne Titel",
+    city: order.city || "Ohne Ort",
+    price: order.price || 0,
+    volume: order.volume || "Nicht angegeben",
+    date: order.date || "",
+    announcer: order.announcer || "Heinrich Hertz Elektrotechnik GmbH",
+    status: order.status || "Offen",
+    description: order.description || "Keine Beschreibung vorhanden.",
+    interestedPartners: order.interestedPartners || [],
+    assignedPartner: order.assignedPartner || ""
+  }));
+
+  render();
 }
 
 loadFromSupabase();
