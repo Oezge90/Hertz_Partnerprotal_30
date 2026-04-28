@@ -579,7 +579,7 @@ function sendMessage(){
   addActivity("Nachricht", "Interessent", `Neue Nachricht zum Auftrag '${order ? order.title : "Allgemein"}' gesendet.`);
   render();
 }
-function createOrder(){
+async function createOrder(){
   const title = document.getElementById("newTitle").value.trim();
   const city = document.getElementById("newCity").value.trim();
   const price = document.getElementById("newPrice").value.trim();
@@ -587,14 +587,34 @@ function createOrder(){
   const date = document.getElementById("newDate").value;
   const announcer = document.getElementById("newAnnouncer").value.trim() || "Heinrich Hertz Elektrotechnik GmbH";
   const description = document.getElementById("newDescription").value.trim() || "Neuer annoncierter Auftrag auf der Plattform.";
-  if(!title || !city || !price || !volume || !date) return alert("Bitte alle Pflichtfelder ausfüllen.");
-  state.orders.unshift({
-    id: Date.now(), title, city, price:Number(price), volume, date, announcer, status:"Offen", description,
-    interestedPartners:[], assignedPartner:""
-  });
-  addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
+
+  if(!title || !city || !price || !volume || !date) {
+    return alert("Bitte alle Pflichtfelder ausfüllen.");
+  }
+
+  const { data, error } = await client
+    .from("orders")
+    .insert([{
+      title,
+      city,
+      price: Number(price),
+      volume,
+      date,
+      announcer,
+      description,
+      status: "Offen"
+    }])
+    .select();
+
+  if(error){
+    console.error("Fehler beim Speichern:", error);
+    return alert("Auftrag konnte nicht gespeichert werden.");
+  }
+
+  alert("Auftrag wurde in Supabase gespeichert.");
   ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => document.getElementById(id).value = "");
-  render();
+
+  await loadFromSupabase();
   showPage("orders");
 }
 function registerPartner(){
