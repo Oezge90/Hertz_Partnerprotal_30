@@ -689,10 +689,10 @@ async function renderMessages(orderId) {
   }
 
   container.innerHTML = messages.map(m => `
-    <div style="margin-bottom:8px;">
-      <strong>${m.sender}:</strong> ${m.body}
-    </div>
-  `).join("");
+  <div style="margin-bottom:8px;">
+    <strong>${m.sender}:</strong> ${m.body}
+  </div>
+`).join("");
 }
   async function handleSend(orderId) {
   const input = document.getElementById("msgInput-" + orderId);
