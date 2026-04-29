@@ -576,6 +576,7 @@ function completeOrder(orderId){
   alert("Auftrag wurde als abgeschlossen markiert.");
 }
 function openMessages(orderId){
+renderMessages(orderId);
   state.currentOrderId = orderId;
   const order = state.orders.find(o=>o.id===orderId);
   if(order) addActivity("Nachricht", "Interessent", `Kontaktansicht für den Auftrag '${order.title}' geöffnet.`);
