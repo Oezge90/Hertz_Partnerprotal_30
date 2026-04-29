@@ -679,6 +679,17 @@ async function loadMessages(orderId) {
 
   return data;
 }
+  async function handleSend(orderId) {
+  const input = document.getElementById(`msgInput-${orderId}`);
+  const text = input.value.trim();
+
+  if (!text) return alert("Bitte Nachricht eingeben.");
+
+  await sendMessage(orderId, "Interessent", "Auftraggeber", text);
+
+  input.value = "";
+  alert("Nachricht wurde gesendet.");
+}
 // ↓ DAS DARFST DU NICHT LÖSCHEN
 </script>
 render();
