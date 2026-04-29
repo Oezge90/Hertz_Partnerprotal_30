@@ -4,9 +4,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const client = supabase.createClient(
+const { createClient } = supabase;
+
+const client = createClient(
   "https://ldnjnhhntdoeyyxygnlc.supabase.co",
-  "sb_publishable_tKK0t8u5AtQZabSu6IQnzA_vbLnW88H"
+  "sb_publishable_tK0t8u5AtQzAbSu6IQnzA_vbLnW88H"
 );
 </script>
   <meta charset="UTF-8" />
