@@ -679,6 +679,21 @@ async function loadMessages(orderId) {
 
   return data;
 }
+async function renderMessages(orderId) {
+  const container = document.getElementById(`messages-${orderId}`);
+  const messages = await loadMessages(orderId);
+
+  if (!messages.length) {
+    container.innerHTML = "<div>Keine Nachrichten</div>";
+    return;
+  }
+
+  container.innerHTML = messages.map(m => `
+    <div style="margin-bottom:8px;">
+      <strong>${m.sender}:</strong> ${m.body}
+    </div>
+  `).join("");
+}
   async function handleSend(orderId) {
   const input = document.getElementById(`msgInput-${orderId}`);
   const text = input.value.trim();
