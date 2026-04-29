@@ -420,7 +420,7 @@ function orderCard(order){
     <div class="chat-box">
   <div>Nachrichten:</div>
   <div id="messages-${order.id}"></div>
-setTimeout(() => renderMessages(order.id), 0);
+  
   <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
   <button onclick="handleSend('${order.id}')">Senden</button>
 </div>
@@ -431,6 +431,9 @@ function escapeQuotes(s){ return (s||"").replaceAll("'", "\\'"); }
 function renderOrders(){
   const filtered = getFilteredOrders();
   document.getElementById("ordersList").innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+  filtered.forEach(order => {
+  renderMessages(order.id);
+});
   filtered.forEach(async (order) => {
   const msgs = await loadMessages(order.id);
   const container = document.getElementById(`messages-${order.id}`);
