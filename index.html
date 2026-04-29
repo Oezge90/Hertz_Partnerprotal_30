@@ -655,7 +655,20 @@ async function sendMessage(orderId, sender, recipient, text) {
     console.log("Nachricht gespeichert");
   }
 }
+async function loadMessages(orderId) {
+  const { data, error } = await client
+    .from("messages")
+    .select("*")
+    .eq("orderRef", orderId)
+    .order("created_at", { ascending: true });
 
+  if (error) {
+    console.error("Fehler beim Laden:", error);
+    return [];
+  }
+
+  return data;
+}
 // ↓ DAS DARFST DU NICHT LÖSCHEN
 </script>
 render();
