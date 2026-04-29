@@ -413,7 +413,7 @@ function orderCard(order){
     </div>
     <div class="actions">
       <button class="btn btn-primary" onclick="expressInterest(${order.id})">Interesse bekunden</button>
-      <button class="btn btn-outline" onclick="openMessages(${order.id})">Nachricht öffnen</button>
+      <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
       ${order.interestedPartners.length > 0 && !["Vergeben","Abgeschlossen"].includes(order.status)
         ? `<button class="btn btn-success" onclick="assignOrder(${order.id}, '${escapeQuotes(order.interestedPartners[0])}')">Auftrag vergeben</button>` : ""}
       ${order.status==="Vergeben"
