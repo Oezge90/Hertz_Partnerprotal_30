@@ -420,7 +420,7 @@ function orderCard(order){
     <div class="chat-box">
   <div>Nachrichten:</div>
   <div id="messages-${order.id}"></div>
-
+setTimeout(() => renderMessages(order.id), 0);
   <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
   <button onclick="handleSend('${order.id}')">Senden</button>
 </div>
