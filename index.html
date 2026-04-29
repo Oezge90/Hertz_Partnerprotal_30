@@ -434,16 +434,6 @@ function renderOrders(){
   filtered.forEach(order => {
   renderMessages(order.id);
 });
-  filtered.forEach(async (order) => {
-  const msgs = await loadMessages(order.id);
-  const container = document.getElementById(`messages-${order.id}`);
-
-  if (container) {
-    container.innerHTML = msgs.map(m => `
-      <div><b>${m.sender}:</b> ${m.body}</div>
-    `).join("");
-  }
-});
   document.getElementById("dashboardOrders").innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
 }
 function renderCityFilter(){
