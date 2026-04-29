@@ -417,7 +417,7 @@ function orderCard(order){
       ${order.status==="Vergeben"
         ? `<button class="btn btn-outline" onclick="completeOrder(${order.id})">Als abgeschlossen markieren</button>` : ""}
     </div>
-    <div class="chat-box">
+    <div class="chat-box" style="display:none;" id="chat-${order.id}">
   <div>Nachrichten:</div>
   <div id="messages-${order.id}"></div>
   
