@@ -701,7 +701,7 @@ async function renderMessages(orderId) {
   if (!text) return alert("Bitte Nachricht eingeben.");
 
   await sendMessage(orderId, "Interessent", "Auftraggeber", text);
-
+await renderMessages(orderId);
   input.value = "";
   alert("Nachricht wurde gesendet.");
 }
