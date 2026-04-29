@@ -688,11 +688,9 @@ async function renderMessages(orderId) {
     return;
   }
 
-  container.innerHTML = messages.map(m => `
-  <div style="margin-bottom:8px;">
-    <strong>${m.sender}:</strong> ${m.body}
-  </div>
-`).join("");
+  container.innerHTML = messages.map(function(m) {
+  return '<div style="margin-bottom:8px;"><strong>' + m.sender + ':</strong> ' + m.body + '</div>';
+}).join("");
 }
   async function handleSend(orderId) {
   const input = document.getElementById("msgInput-" + orderId);
