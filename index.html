@@ -668,6 +668,29 @@ async function loginPartner(){
   if(error || !data){
     return alert("Login fehlgeschlagen.");
   }
+  async function login() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  const { data, error } = await client
+    .from("partners")
+    .select("*")
+    .eq("email", email)
+    .eq("password", password)
+    .single();
+
+  if (error || !data) {
+    return alert("Login fehlgeschlagen");
+  }
+
+  localStorage.setItem("chatName", data.name);
+  localStorage.setItem("role", data.role);
+
+  document.getElementById("currentUserName").innerText = data.name;
+
+  alert("Login erfolgreich");
+  render();
+}
 
   // 👉 Name + Rolle setzen
   localStorage.setItem("chatName", data.name);
