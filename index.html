@@ -695,10 +695,12 @@ async function sendMessage(orderId, sender, recipient, text) {
   }
 }
 async function loadMessages(orderId) {
+ const name = localStorage.getItem("chatName") || "Unbekannt";
   const { data, error } = await client
     .from("messages")
     .select("*")
     .eq("orderRef", String(orderId))
+    .or(`sender.eq.${name},recipient.eq.${name}"`)
     .order("created_at", { ascending: true });
 
   if (error) {
