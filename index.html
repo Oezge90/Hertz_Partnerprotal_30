@@ -671,7 +671,7 @@ async function loadMessages(orderId) {
   const { data, error } = await client
     .from("messages")
     .select("*")
-    .eq("orderRef", orderId)
+    .eq("orderRef", String(orderId))
     .order("created_at", { ascending: true });
 
   if (error) {
