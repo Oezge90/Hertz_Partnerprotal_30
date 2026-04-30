@@ -699,20 +699,11 @@ async function loginPartner(){
   localStorage.setItem("role", data.role);
 
   document.getElementById("currentUserName").innerText = data.name;
-
+document.getElementById("currentUserRole").innerText = data.role;
   alert("Login erfolgreich");
   render();
 }
 
-  // 👉 Name + Rolle setzen
-  localStorage.setItem("chatName", data.name);
-  localStorage.setItem("role", data.role);
-
-  document.getElementById("currentUserName").innerText = data.name;
-
-  alert("Login erfolgreich!");
-  render();
-}
   
 document.getElementById("globalSearch").addEventListener("input", render);
 document.getElementById("orderSearch").addEventListener("input", render);
@@ -742,6 +733,7 @@ async function login() {
 }
   if(localStorage.getItem("chatName")){
   document.getElementById("currentUserName").innerText = localStorage.getItem("chatName");
+  document.getElementById("currentUserRole").innerText = localStorage.getItem("role");
 }
 const el = document.getElementById("currentUserName");
 if (el) el.innerText = localStorage.getItem("chatName") || "Nicht gesetzt";
