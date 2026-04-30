@@ -679,7 +679,7 @@ async function loadMessages(orderId) {
 
   return data;
 }
-async function renderMessages(orderId) {
+  async function renderMessages(orderId) {
   const container = document.getElementById(`messages-${orderId}`);
   if (!container) return;
   
@@ -691,8 +691,24 @@ async function renderMessages(orderId) {
   }
 
   container.innerHTML = messages.map(function(m) {
-  return '<div style="margin-bottom:8px;"><strong>' + m.sender + ':</strong> ' + m.body + '</div>';
-}).join("");
+    const isMe = m.sender === "Interessent";
+
+    return `
+      <div style="display:flex; justify-content:${isMe ? "flex-end" : "flex-start"}; margin-bottom:8px;">
+        <div style="
+          max-width:70%;
+          padding:10px;
+          border-radius:12px;
+          background:${isMe ? "#3ba4ff" : "#e5e7eb"};
+          color:${isMe ? "white" : "black"};
+        ">
+          <div style="font-size:12px; opacity:0.7;">${m.sender}</div>
+          <div>${m.body}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+  container.scrollTop = container.scrollHeight;
 }
   async function handleSend(orderId) {
   const input = document.getElementById("msgInput-" + orderId);
