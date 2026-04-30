@@ -739,6 +739,9 @@ async function login() {
   alert("Login erfolgreich");
   render();
 }
+  if(localStorage.getItem("chatName")){
+  document.getElementById("currentUserName").innerText = localStorage.getItem("chatName");
+}
 const el = document.getElementById("currentUserName");
 if (el) el.innerText = localStorage.getItem("chatName") || "Nicht gesetzt";
 loadFromSupabase();
