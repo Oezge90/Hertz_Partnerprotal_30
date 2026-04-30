@@ -739,7 +739,10 @@ async function loadMessages(orderId) {
 
   if (!text) return alert("Bitte Nachricht eingeben.");
 
-  await sendMessage(orderId, "Interessent", "Auftraggeber", text);
+  const sender = prompt("Wer schreibt? Interessent oder Auftraggeber?") || "Interessent";
+const recipient = sender === "Interessent" ? "Auftraggeber" : "Interessent";
+
+await sendMessage(orderId, sender, recipient, text);
 await renderMessages(orderId);
   input.value = "";
   alert("Nachricht wurde gesendet.");
