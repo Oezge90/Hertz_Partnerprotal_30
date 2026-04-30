@@ -739,7 +739,13 @@ async function loadMessages(orderId) {
 
   if (!text) return alert("Bitte Nachricht eingeben.");
 
-  const sender = prompt("Dein Name / Firma?") || "Interessent";
+  let sender = localStorage.getItem("chatName");
+
+if (!sender) {
+  sender = prompt("Dein Name / Firma?") || "Interessent";
+  localStorage.setItem("chatName", sender);
+}
+
 const recipient = "Auftraggeber";
 
 await sendMessage(orderId, sender, recipient, text);
