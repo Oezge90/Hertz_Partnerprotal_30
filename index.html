@@ -716,7 +716,29 @@ async function loginPartner(){
 document.getElementById("globalSearch").addEventListener("input", render);
 document.getElementById("orderSearch").addEventListener("input", render);
 document.getElementById("cityFilter").addEventListener("change", render);
+async function login() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
+  const { data, error } = await client
+    .from("partners")
+    .select("*")
+    .eq("email", email)
+    .eq("password", password)
+    .single();
+
+  if (error || !data) {
+    return alert("Login fehlgeschlagen");
+  }
+
+  localStorage.setItem("chatName", data.name);
+  localStorage.setItem("role", data.role);
+
+  document.getElementById("currentUserName").innerText = data.name;
+
+  alert("Login erfolgreich");
+  render();
+}
 const el = document.getElementById("currentUserName");
 if (el) el.innerText = localStorage.getItem("chatName") || "Nicht gesetzt";
 loadFromSupabase();
