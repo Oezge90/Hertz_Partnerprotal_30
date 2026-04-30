@@ -699,6 +699,7 @@ async function loadMessages(orderId) {
     .from("messages")
     .select("*")
     .eq("orderRef", String(orderId))
+    .or(`sender.eq.${localStorage.getItem("chatName")},recipient.eq.${localStorage.getItem("chatName")}`)
     .order("created_at", { ascending: true });
 
   if (error) {
