@@ -153,8 +153,17 @@ const client = createClient(
     <button class="nav-btn" data-page="register">Registrierung</button>
 
     <div class="sidebar-note">
-      <strong>Admin-Hinweis</strong><br>
-      Registrierungen, Interessebekundungen, Vergaben, Nachrichten und Statusänderungen werden protokolliert.
+  <strong>Admin-Hinweis</strong><br>
+  Registrierungen, Interessensbekundungen, Vergaben, Nachrichten und Statusänderungen werden protokolliert.
+  
+  <hr style="margin:10px 0;">
+
+  <div>
+    <div style="font-size:12px; color:#666;">Angemeldet als:</div>
+    <div id="currentUserName" style="font-weight:bold;"></div>
+    <button class="btn btn-outline" style="margin-top:8px;" onclick="changeName()">Name ändern</button>
+  </div>
+</div>
     </div>
   </aside>
 
@@ -756,16 +765,18 @@ if (!sender) {
   sender = prompt("Dein Name / Firma?") || "Interessent";
   localStorage.setItem("chatName", sender);
 }
+function changeName() {
+  const newName = prompt("Neuer Name / Firma:");
+  if (!newName) return;
 
-const role = prompt("Rolle? Interessent oder Auftraggeber?") || "Interessent";
-const recipient = role === "Interessent" ? "Auftraggeber" : "Interessent";
+  localStorage.setItem("chatName", newName);
+  document.getElementById("currentUserName").innerText = newName;
 
-await sendMessage(orderId, role === "Auftraggeber" ? "Auftraggeber" : sender, recipient, text);
-
-await renderMessages(orderId);
-  input.value = "";
-  alert("Nachricht wurde gesendet.");
+  alert("Name wurde geändert.");
 }
+const savedName = localStorage.getItem("chatName") || "Unbekannt";
+const el = document.getElementById("currentUserName");
+if (el) el.innerText = savedName;
 // ↓ DAS DARFST DU NICHT LÖSCHEN
 render();
 </script>
