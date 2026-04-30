@@ -573,6 +573,21 @@ function completeOrder(orderId){
   alert("Auftrag wurde als abgeschlossen markiert.");
 }
 function openMessages(orderId) {
+  client
+  .channel("messages-" + orderId)
+  .on(
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "messages",
+      filter: "orderRef=eq." + orderId
+    },
+    function() {
+      renderMessages(orderId);
+    }
+  )
+  .subscribe();
   const chat = document.getElementById("chat-" + orderId);
   if (!chat) return;
 
