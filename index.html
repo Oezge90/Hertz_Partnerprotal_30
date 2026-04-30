@@ -593,21 +593,46 @@ async function createOrder(){
   showPage("orders");
 }
 
-function registerPartner(){
+async function registerPartner(){
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
   const password = document.getElementById("regPassword").value.trim();
-  const role = document.getElementById("regRole").value.trim();
+  const role = document.getElementById("regRole").value.trim() || "Interessent";
 
-  if(!name || !email || !password) return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
+  if(!name || !email || !password){
+    return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
+  }
 
-  addActivity("Registrierung", name, `Neuer Partner registriert${role ? " ("+role+")" : ""}.`);
-  ["regName","regEmail","regPassword","regRole"].forEach(id => document.getElementById(id).value = "");
-  render();
+  const { error } = await client
+    .from("partners")
+    .insert([{
+      name,
+      email,
+      password,
+      role
+    }]);
+
+  if(error){
+    console.error("Fehler:", error);
+    return alert("Registrierung fehlgeschlagen.");
+  }
+
+  // 👉 WICHTIG: Name speichern
+  localStorage.setItem("chatName", name);
+  localStorage.setItem("role", role);
+
+  document.getElementById("currentUserName").innerText = name;
+
+  addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
+
+  ["regName","regEmail","regPassword","regRole"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+
+  alert("Registrierung erfolgreich!");
+
   showPage("dashboard");
-  alert("Partner wurde registriert.");
 }
-
 function render(){
   updateNameDisplay();
   renderStats();
