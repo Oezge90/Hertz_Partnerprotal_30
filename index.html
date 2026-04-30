@@ -755,9 +755,10 @@ if (!sender) {
   localStorage.setItem("chatName", sender);
 }
 
-const recipient = "Auftraggeber";
+const role = prompt("Rolle? Interessent oder Auftraggeber?") || "Interessent";
+const recipient = role === "Interessent" ? "Auftraggeber" : "Interessent";
 
-await sendMessage(orderId, sender, recipient, text);
+await sendMessage(orderId, role === "Auftraggeber" ? "Auftraggeber" : sender, recipient, text);
 
 await renderMessages(orderId);
   input.value = "";
