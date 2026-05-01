@@ -578,9 +578,6 @@ async function createOrder(){
   if(getRole() !== "Auftraggeber"){
   return alert("Nur Auftraggeber dürfen Aufträge erstellen.");
 }
-  if(getRole() !== "Auftraggeber"){
-  return alert("Nur Auftraggeber dürfen Aufträge erstellen.");
-}
   const title = document.getElementById("newTitle").value.trim();
   const city = document.getElementById("newCity").value.trim();
   const price = document.getElementById("newPrice").value.trim();
