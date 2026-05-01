@@ -15,53 +15,282 @@
   <title>Hertz-Partnerportal</title>
 
   <style>
-    :root{--bg:#f3f9ff;--card:#fff;--primary:#3ba4ff;--accent:#20b486;--text:#1f2d3d;--muted:#6b7a90;--border:#d9ebfb;--shadow:0 10px 30px rgba(29,93,155,.08)}
+    :root{
+      --bg:#f3f9ff;
+      --card:#fff;
+      --primary:#3ba4ff;
+      --accent:#20b486;
+      --text:#1f2d3d;
+      --muted:#6b7a90;
+      --border:#d9ebfb;
+      --shadow:0 10px 30px rgba(29,93,155,.08);
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(135deg,#eef7ff,#f9fcff,#edf8ff)}
-    .app{display:grid;grid-template-columns:270px 1fr;gap:20px;min-height:100vh;padding:20px}
-    .sidebar,.panel,.card{background:rgba(255,255,255,.94);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:30px}
-    .sidebar{padding:20px;position:sticky;top:20px;height:calc(100vh - 40px)}
-    .brand{display:flex;gap:12px;align-items:center;margin-bottom:24px}
-    .brand-badge{width:46px;height:46px;border-radius:16px;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:linear-gradient(135deg,#eef7ff,#f9fcff,#edf8ff);
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns:270px 1fr;
+      gap:20px;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .sidebar,.panel,.card{
+      background:rgba(255,255,255,.94);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      border-radius:30px;
+    }
+
+    .sidebar{
+      padding:20px;
+      position:sticky;
+      top:20px;
+      height:calc(100vh - 40px);
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:24px;
+    }
+
+    .brand-badge{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      background:var(--primary);
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+    }
+
     .muted{color:var(--muted)}
     .tiny{font-size:12px}
-    .nav-btn{width:100%;text-align:left;border:none;cursor:pointer;padding:14px 16px;border-radius:18px;background:transparent;margin-bottom:8px;font-size:15px;color:var(--text)}
-    .nav-btn.active{background:var(--primary);color:white;font-weight:700}
-    .sidebar-note{margin-top:20px;padding:16px;border-radius:24px;background:#eef7ff;border:1px solid var(--border);font-size:14px;line-height:1.5}
-    .content{display:flex;flex-direction:column;gap:20px}
-    .panel,.card{padding:22px 24px}
-    .panel-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
-    input,select,textarea{border:1px solid var(--border);border-radius:18px;padding:12px 14px;font-size:14px;outline:none;width:100%;background:white}
-    textarea{min-height:110px;resize:vertical}
-    .search-row{display:flex;gap:10px;flex-wrap:wrap}
+
+    .nav-btn{
+      width:100%;
+      text-align:left;
+      border:none;
+      cursor:pointer;
+      padding:14px 16px;
+      border-radius:18px;
+      background:transparent;
+      margin-bottom:8px;
+      font-size:15px;
+      color:var(--text);
+    }
+
+    .nav-btn.active{
+      background:var(--primary);
+      color:white;
+      font-weight:700;
+    }
+
+    .sidebar-note{
+      margin-top:20px;
+      padding:16px;
+      border-radius:24px;
+      background:#eef7ff;
+      border:1px solid var(--border);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+    }
+
+    .panel,.card{
+      padding:22px 24px;
+    }
+
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    input,select,textarea{
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:14px;
+      outline:none;
+      width:100%;
+      background:white;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    .search-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
     .search{min-width:280px}
-    .btn{border:none;cursor:pointer;border-radius:18px;padding:12px 16px;font-weight:700;font-size:14px}
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius:18px;
+      padding:12px 16px;
+      font-weight:700;
+      font-size:14px;
+    }
+
     .btn-primary{background:var(--primary);color:white}
     .btn-success{background:var(--accent);color:white}
     .btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
-    .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
-    .stat-value{font-size:28px;font-weight:700;margin:8px 0 4px}
-    .grid-2{display:grid;grid-template-columns:1.35fr .95fr;gap:20px}
-    .order{border:1px solid var(--border);border-radius:24px;padding:18px;margin-bottom:14px;background:white}
-    .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-    .badge{display:inline-block;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700}
+    .btn-danger{background:#fee2e2;color:#991b1b}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:14px;
+    }
+
+    .stat-value{
+      font-size:28px;
+      font-weight:700;
+      margin:8px 0 4px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1.35fr .95fr;
+      gap:20px;
+    }
+
+    .order{
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:18px;
+      margin-bottom:14px;
+      background:white;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+
     .status-Offen{background:#e3f2ff;color:#1f78c8}
     .status-InVerhandlung{background:#fff3d6;color:#9a6700}
     .status-Vergeben{background:#dbf7ec;color:#06754f}
     .status-Abgeschlossen{background:#eceff3;color:#506072}
-    .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;font-size:14px}
-    .info-box{padding:14px;border-radius:18px;background:#f5fbff;border:1px solid var(--border);font-size:14px;line-height:1.5}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    .timeline-item{padding:14px;border-radius:18px;background:#f8fbff;border:1px solid var(--border);margin-bottom:10px}
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin:16px 0;
+      font-size:14px;
+    }
+
+    .info-box{
+      padding:14px;
+      border-radius:18px;
+      background:#f5fbff;
+      border:1px solid var(--border);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .timeline-item{
+      padding:14px;
+      border-radius:18px;
+      background:#f8fbff;
+      border:1px solid var(--border);
+      margin-bottom:10px;
+    }
+
     .hidden{display:none}
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .chat-box{display:none;margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:18px;background:#f8fcff}
-    .chat-list{max-height:360px;overflow-y:auto;padding:6px}
-    .chat-input-row{display:flex;gap:10px;margin-top:14px;align-items:center}
-    .chat-input-row input{border-radius:999px}
-    @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
-    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}}
-    @media(max-width:640px){.meta,.two-col,.stats{grid-template-columns:1fr}.search{min-width:100%}}
+
+    .two-col{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .chat-box{
+      display:none;
+      margin-top:14px;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#f8fcff;
+    }
+
+    .chat-list{
+      max-height:360px;
+      overflow-y:auto;
+      padding:6px;
+    }
+
+    .chat-input-row{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+    }
+
+    .chat-input-row input{
+      border-radius:999px;
+    }
+
+    @media(max-width:1200px){
+      .stats{grid-template-columns:repeat(3,1fr)}
+      .grid-2{grid-template-columns:1fr}
+    }
+
+    @media(max-width:900px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:static;height:auto}
+      .meta,.two-col,.stats{grid-template-columns:1fr 1fr}
+    }
+
+    @media(max-width:640px){
+      .meta,.two-col,.stats{grid-template-columns:1fr}
+      .search{min-width:100%}
+    }
   </style>
 </head>
 
@@ -100,6 +329,7 @@
           <h1 style="margin:0 0 6px">Hertz-Partnerportal</h1>
           <div class="muted">Online-Version als direkt hochladbare Web-App</div>
         </div>
+
         <div class="search-row">
           <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
           <button class="btn btn-primary" onclick="showPage('orders')">Aufträge finden</button>
@@ -113,8 +343,10 @@
 
       <div class="grid-2" style="margin-top:20px">
         <div class="card">
-          <h2 style="margin-top:0">Kachel: Auftragssuchende sehen annoncierte Aufträge</h2>
-          <div class="muted" style="margin-bottom:14px">Partner können offene Aufträge durchsuchen, Interesse bekunden und den Auftraggeber kontaktieren.</div>
+          <h2 style="margin-top:0">Auftragssuchende sehen annoncierte Aufträge</h2>
+          <div class="muted" style="margin-bottom:14px">
+            Jeder Partner kann Aufträge annoncieren und Interesse an Aufträgen anderer Partner bekunden.
+          </div>
           <div id="dashboardOrders"></div>
           <button class="btn btn-outline" onclick="showPage('orders')">Alle Aufträge ansehen</button>
         </div>
@@ -133,13 +365,15 @@
         <div class="row">
           <div>
             <h2 style="margin-top:0">Aufträge entdecken</h2>
-            <div class="muted">Business-Version mit Chat, Interessentenliste und Vergabe.</div>
+            <div class="muted">Offene Aufträge, Interesse, Chat und Vergabe.</div>
           </div>
+
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <input id="orderSearch" placeholder="Aufträge durchsuchen" style="width:240px">
             <select id="cityFilter" style="width:190px"></select>
           </div>
         </div>
+
         <div id="ordersList" style="margin-top:16px"></div>
       </div>
     </section>
@@ -147,7 +381,7 @@
     <section id="page-createOrder" class="page hidden">
       <div class="card">
         <h2 style="margin-top:0">Neuen Auftrag einstellen</h2>
-        <div class="muted" style="margin-bottom:14px">Nur Auftraggeber oder Admins können Aufträge erstellen.</div>
+        <div class="muted" style="margin-bottom:14px">Jeder eingeloggte Partner darf Aufträge annoncieren.</div>
 
         <div class="two-col">
           <input id="newTitle" placeholder="Auftragstitel">
@@ -182,7 +416,6 @@
           <input id="regPassword" type="password" placeholder="Passwort">
           <select id="regRole">
             <option value="Partner">Partner</option>
-            <option value="Auftraggeber">Auftraggeber</option>
             <option value="Admin">Admin</option>
           </select>
         </div>
@@ -211,7 +444,7 @@ let state = {
   orders: [],
   activities: [
     {id:1,date:"2026-04-23",time:"08:30",type:"Registrierung",user:"Baran Alagöz",details:"Neuer Partner registriert und Profil vervollständigt."},
-    {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg mit Preisangabe und Volumen veröffentlicht."},
+    {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg veröffentlicht."},
     {id:3,date:"2026-04-24",time:"11:40",type:"Interesse bekundet",user:"Nordlicht Prüfservice",details:"Partner hat Interesse an einem Auftrag in Hamburg bekundet."}
   ]
 };
@@ -230,19 +463,25 @@ function isLoggedIn(){
   return !!localStorage.getItem("chatName");
 }
 
+function isAdmin(){
+  return getRole() === "Admin";
+}
+
 function canCreateOrder(){
-  const role = getRole();
-  return role === "Auftraggeber" || role === "Admin";
+  return isLoggedIn();
 }
 
-function canExpressInterest(){
-  const role = getRole();
-  return role === "Partner" || role === "Interessent";
+function canExpressInterest(order){
+  if(!isLoggedIn()) return false;
+  if(!order) return false;
+  return String(order.announcer).trim() !== String(getChatName()).trim();
 }
 
-function canAssignOrder(){
-  const role = getRole();
-  return role === "Auftraggeber" || role === "Admin";
+function canAssignOrder(order){
+  if(!isLoggedIn()) return false;
+  if(isAdmin()) return true;
+  if(!order) return false;
+  return String(order.announcer).trim() === String(getChatName()).trim();
 }
 
 function updateNameDisplay(){
@@ -277,7 +516,14 @@ function todayDate(){
 }
 
 function addActivity(type,user,details){
-  state.activities.unshift({id:Date.now(),date:todayDate(),time:nowTime(),type,user,details});
+  state.activities.unshift({
+    id:Date.now(),
+    date:todayDate(),
+    time:nowTime(),
+    type,
+    user,
+    details
+  });
 }
 
 async function loadFromSupabase(){
@@ -300,7 +546,7 @@ async function loadFromSupabase(){
     price: order.price || 0,
     volume: order.volume || "Nicht angegeben",
     date: order.date || "",
-    announcer: order.announcer || "Heinrich Hertz Elektrotechnik GmbH",
+    announcer: order.announcer || "Unbekannt",
     status: order.status || "Offen",
     description: order.description || "Keine Beschreibung vorhanden.",
     interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
@@ -311,8 +557,8 @@ async function loadFromSupabase(){
 }
 
 function showPage(page){
-  if(page === "createOrder" && !canCreateOrder()){
-    return alert("Nur Auftraggeber oder Admins dürfen Aufträge erstellen.");
+  if(page === "createOrder" && !isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
   }
 
   document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
@@ -320,7 +566,9 @@ function showPage(page){
   const target = document.getElementById("page-"+page);
   if(target) target.classList.remove("hidden");
 
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
+  document.querySelectorAll(".nav-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.page === page);
+  });
 
   render();
 }
@@ -379,13 +627,21 @@ function getFilteredOrders(){
 }
 
 function orderCard(order){
+  const isOwnOrder = String(order.announcer).trim() === String(getChatName()).trim();
+
+  const interestButton = canExpressInterest(order)
+    ? `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`
+    : isOwnOrder
+      ? `<button class="btn btn-outline" disabled>Eigener Auftrag</button>`
+      : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`;
+
   const assignButton = order.interestedPartners.length > 0 &&
     !["Vergeben","Abgeschlossen"].includes(order.status) &&
-    canAssignOrder()
+    canAssignOrder(order)
       ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${String(order.interestedPartners[0]).replaceAll("'","\\'")}')">Auftrag vergeben</button>`
       : "";
 
-  const completeButton = order.status === "Vergeben" && canAssignOrder()
+  const completeButton = order.status === "Vergeben" && canAssignOrder(order)
       ? `<button class="btn btn-outline" onclick="completeOrder('${order.id}')">Als abgeschlossen markieren</button>`
       : "";
 
@@ -413,7 +669,7 @@ function orderCard(order){
     </div>
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>
+      ${interestButton}
       <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
       ${assignButton}
       ${completeButton}
@@ -454,7 +710,7 @@ function renderCityFilter(){
 
   sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${c}">${c}</option>`).join("");
 
-  if([...sel.options].some(o=>o.value===current)){
+  if([...sel.options].some(o=>o.value === current)){
     sel.value = current;
   }
 }
@@ -522,7 +778,6 @@ async function sendChatMessage(orderId, sender, recipient, text){
 
 async function loadMessages(orderId){
   const name = getChatName();
-  const role = getRole();
 
   let query = client
     .from("messages")
@@ -530,7 +785,7 @@ async function loadMessages(orderId){
     .eq("orderRef", String(orderId))
     .order("created_at", { ascending:true });
 
-  if(role !== "Auftraggeber" && role !== "Admin" && name){
+  if(!isAdmin() && name){
     query = query.or(`sender.eq.${name},recipient.eq.${name},recipient.eq.Auftraggeber`);
   }
 
@@ -557,7 +812,7 @@ async function renderOrderMessages(orderId){
   }
 
   container.innerHTML = messages.map(m => {
-    const isMe = m.sender === myName || (getRole() === "Auftraggeber" && m.sender === "Auftraggeber");
+    const isMe = m.sender === myName;
     return `
       <div style="display:flex;justify-content:${isMe ? "flex-end" : "flex-start"};margin-bottom:8px">
         <div style="
@@ -615,15 +870,14 @@ async function handleSend(orderId){
   const text = input.value.trim();
   if(!text) return alert("Bitte Nachricht eingeben.");
 
-  const role = getRole();
   const name = getChatName();
+  const order = state.orders.find(o=>String(o.id)===String(orderId));
 
   let sender = name;
-  let recipient = "Auftraggeber";
+  let recipient = order ? order.announcer : "Auftraggeber";
 
-  if(role === "Auftraggeber" || role === "Admin"){
-    sender = "Auftraggeber";
-    recipient = prompt("Antwort an welchen Namen / Firma?") || "Partner";
+  if(order && order.announcer === name){
+    recipient = prompt("Antwort an welchen Interessenten?") || "Partner";
   }
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
@@ -639,18 +893,20 @@ async function expressInterest(orderId){
     return alert("Bitte zuerst registrieren oder einloggen.");
   }
 
-  if(!canExpressInterest()){
-    return alert("Nur Partner dürfen Interesse bekunden.");
-  }
-
   const order = state.orders.find(o=>String(o.id)===String(orderId));
   if(!order) return;
 
   const partnerName = getChatName();
 
-  if(!order.interestedPartners.includes(partnerName)){
-    order.interestedPartners.push(partnerName);
+  if(String(order.announcer).trim() === String(partnerName).trim()){
+    return alert("Du kannst kein Interesse an deinem eigenen Auftrag bekunden.");
   }
+
+  if(order.interestedPartners.includes(partnerName)){
+    return alert("Du hast bereits Interesse bekundet.");
+  }
+
+  order.interestedPartners.push(partnerName);
 
   if(order.status === "Offen"){
     order.status = "In Verhandlung";
@@ -675,12 +931,12 @@ async function expressInterest(orderId){
 }
 
 async function assignOrder(orderId, partnerName){
-  if(!canAssignOrder()){
-    return alert("Nur Auftraggeber oder Admins dürfen Aufträge vergeben.");
-  }
-
   const order = state.orders.find(o=>String(o.id)===String(orderId));
   if(!order) return;
+
+  if(!canAssignOrder(order)){
+    return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag vergeben.");
+  }
 
   const { error } = await client
     .from("orders")
@@ -701,12 +957,12 @@ async function assignOrder(orderId, partnerName){
 }
 
 async function completeOrder(orderId){
-  if(!canAssignOrder()){
-    return alert("Nur Auftraggeber oder Admins dürfen Aufträge abschließen.");
-  }
-
   const order = state.orders.find(o=>String(o.id)===String(orderId));
   if(!order) return;
+
+  if(!canAssignOrder(order)){
+    return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag abschließen.");
+  }
 
   const { error } = await client
     .from("orders")
@@ -726,10 +982,6 @@ async function completeOrder(orderId){
 async function createOrder(){
   if(!isLoggedIn()){
     return alert("Bitte zuerst registrieren oder einloggen.");
-  }
-
-  if(!canCreateOrder()){
-    return alert("Nur Auftraggeber oder Admins dürfen Aufträge erstellen.");
   }
 
   const title = document.getElementById("newTitle").value.trim();
@@ -764,8 +1016,9 @@ async function createOrder(){
 
   addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
 
-  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
-    document.getElementById(id).value = "";
+  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription","newAnnouncer"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = "";
   });
 
   alert("Auftrag erstellt.");
@@ -799,7 +1052,8 @@ async function registerPartner(){
   addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
 
   ["regName","regEmail","regPassword"].forEach(id => {
-    document.getElementById(id).value = "";
+    const el = document.getElementById(id);
+    if(el) el.value = "";
   });
 
   alert("Registrierung erfolgreich.");
@@ -827,7 +1081,7 @@ async function login(){
   }
 
   localStorage.setItem("chatName", data.name);
-  localStorage.setItem("role", data.role);
+  localStorage.setItem("role", data.role || "Partner");
 
   updateNameDisplay();
 
