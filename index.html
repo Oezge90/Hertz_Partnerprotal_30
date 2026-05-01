@@ -610,17 +610,6 @@ alert("Auftrag erstellt!");
 render();
 }
 
-  if(error){
-    console.error("Fehler beim Speichern:", error);
-    return alert("Auftrag konnte nicht gespeichert werden.");
-  }
-
-  alert("Auftrag wurde gespeichert.");
-  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => document.getElementById(id).value = "");
-  await loadFromSupabase();
-  showPage("orders");
-}
-
 async function registerPartner(){
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
