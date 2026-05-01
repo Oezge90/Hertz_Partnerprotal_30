@@ -602,6 +602,13 @@ async function createOrder(){
     interestedPartners:[],
     assignedPartner:""
   }]);
+  if (error) {
+  return alert("Fehler beim Speichern");
+}
+
+alert("Auftrag erstellt!");
+render();
+}
 
   if(error){
     console.error("Fehler beim Speichern:", error);
