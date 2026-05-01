@@ -8,9 +8,6 @@
       "https://ldnjnhhntdoeyyxygnlc.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbmpuaGhudGRvZXl5eHlnbmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDQ3MzAsImV4cCI6MjA5Mjg4MDczMH0.LY8oW99vg3Df8jobbtl2kqN7MmmDktc3YfBl7u4GQmA"
     );
-    function getRole(){
-  return localStorage.getItem("role") || "Interessent";
-}
   </script>
 
   <meta charset="UTF-8" />
@@ -83,16 +80,16 @@
     <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
     <button class="nav-btn" data-page="createOrder">Auftrag vergeben</button>
     <button class="nav-btn" data-page="admin">Admin-Kalender</button>
-    <button class="nav-btn" data-page="register">Registrierung</button>
+    <button class="nav-btn" data-page="register">Registrierung / Login</button>
 
     <div class="sidebar-note">
       <strong>Admin-Hinweis</strong><br>
       Registrierungen, Interessensbekundungen, Vergaben, Nachrichten und Statusänderungen werden protokolliert.
       <hr style="margin:10px 0;">
       <div style="font-size:12px;color:#666">Angemeldet als:</div>
-      <div id="currentUserName" style="font-weight:bold;margin-bottom:8px"></div>
-      <div id="currentUserRole" style="font-size:12px;color:#666;"></div>
-      <button class="btn btn-outline" onclick="changeName()">Name ändern</button>
+      <div id="currentUserName" style="font-weight:bold;margin-bottom:4px"></div>
+      <div id="currentUserRole" style="font-size:12px;color:#666;margin-bottom:8px"></div>
+      <button class="btn btn-outline" onclick="logout()">Logout</button>
     </div>
   </aside>
 
@@ -113,6 +110,7 @@
 
     <section id="page-dashboard" class="page">
       <div class="stats" id="stats"></div>
+
       <div class="grid-2" style="margin-top:20px">
         <div class="card">
           <h2 style="margin-top:0">Kachel: Auftragssuchende sehen annoncierte Aufträge</h2>
@@ -120,6 +118,7 @@
           <div id="dashboardOrders"></div>
           <button class="btn btn-outline" onclick="showPage('orders')">Alle Aufträge ansehen</button>
         </div>
+
         <div class="card">
           <h2 style="margin-top:0">Admin-Verlauf im Kalenderstil</h2>
           <div class="muted" style="margin-bottom:14px">Alle Aktivitäten werden chronologisch angezeigt.</div>
@@ -148,17 +147,21 @@
     <section id="page-createOrder" class="page hidden">
       <div class="card">
         <h2 style="margin-top:0">Neuen Auftrag einstellen</h2>
+        <div class="muted" style="margin-bottom:14px">Nur Auftraggeber oder Admins können Aufträge erstellen.</div>
+
         <div class="two-col">
           <input id="newTitle" placeholder="Auftragstitel">
           <input id="newCity" placeholder="Ausführungsort">
           <input id="newPrice" placeholder="Preis in Euro">
           <input id="newVolume" placeholder="Auftragsvolumen">
           <input id="newDate" type="date">
-          <input id="newAnnouncer" placeholder="Annoncierender Partner / Firma" value="Heinrich Hertz Elektrotechnik GmbH">
+          <input id="newAnnouncer" placeholder="Annoncierender Partner / Firma">
         </div>
+
         <div style="margin-top:14px">
           <textarea id="newDescription" placeholder="Beschreibung"></textarea>
         </div>
+
         <div class="actions">
           <button class="btn btn-success" onclick="createOrder()">Auftrag veröffentlichen</button>
         </div>
@@ -172,26 +175,32 @@
     <section id="page-register" class="page hidden">
       <div class="card" style="max-width:760px">
         <h2 style="margin-top:0">Partner-Registrierung</h2>
+
         <div class="two-col">
           <input id="regName" placeholder="Unternehmen / Ansprechpartner">
           <input id="regEmail" placeholder="E-Mail-Adresse">
           <input id="regPassword" type="password" placeholder="Passwort">
-          <input id="regRole" placeholder="Rolle / Partnerart">
-</div>
+          <select id="regRole">
+            <option value="Partner">Partner</option>
+            <option value="Auftraggeber">Auftraggeber</option>
+            <option value="Admin">Admin</option>
+          </select>
         </div>
+
         <div class="actions">
           <button class="btn btn-primary" onclick="registerPartner()">Registrieren</button>
         </div>
-      <h2 style="margin-top:30px">Login</h2>
 
-<div class="two-col">
-  <input id="loginEmail" placeholder="E-Mail">
-  <input id="loginPassword" type="password" placeholder="Passwort">
-</div>
+        <h2 style="margin-top:30px">Login</h2>
 
-<div class="actions">
-  <button class="btn btn-primary" onclick="login()">Login</button>
-</div>
+        <div class="two-col">
+          <input id="loginEmail" placeholder="E-Mail">
+          <input id="loginPassword" type="password" placeholder="Passwort">
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="login()">Login</button>
+        </div>
       </div>
     </section>
   </main>
@@ -209,26 +218,52 @@ let state = {
 
 const refreshTimers = {};
 
+function getRole(){
+  return localStorage.getItem("role") || "";
+}
+
 function getChatName(){
-  let name = localStorage.getItem("chatName");
-  if(!name){
-    name = prompt("Dein Name / Firma?") || "Interessent";
-    localStorage.setItem("chatName", name);
-  }
-  return name;
+  return localStorage.getItem("chatName") || "";
+}
+
+function isLoggedIn(){
+  return !!localStorage.getItem("chatName");
+}
+
+function canCreateOrder(){
+  const role = getRole();
+  return role === "Auftraggeber" || role === "Admin";
+}
+
+function canExpressInterest(){
+  const role = getRole();
+  return role === "Partner" || role === "Interessent";
+}
+
+function canAssignOrder(){
+  const role = getRole();
+  return role === "Auftraggeber" || role === "Admin";
 }
 
 function updateNameDisplay(){
-  const el = document.getElementById("currentUserName");
-  if(el) el.innerText = localStorage.getItem("chatName") || "Nicht gesetzt";
+  const nameEl = document.getElementById("currentUserName");
+  const roleEl = document.getElementById("currentUserRole");
+
+  if(nameEl){
+    nameEl.innerText = localStorage.getItem("chatName") || "Nicht eingeloggt";
+  }
+
+  if(roleEl){
+    roleEl.innerText = localStorage.getItem("role") || "";
+  }
 }
 
-function changeName(){
-  const newName = prompt("Neuer Name / Firma:");
-  if(!newName) return;
-  localStorage.setItem("chatName", newName);
+function logout(){
+  localStorage.removeItem("chatName");
+  localStorage.removeItem("role");
   updateNameDisplay();
   render();
+  alert("Du wurdest ausgeloggt.");
 }
 
 function nowTime(){
@@ -246,7 +281,10 @@ function addActivity(type,user,details){
 }
 
 async function loadFromSupabase(){
-  const { data, error } = await client.from("orders").select("*").order("created_at", { ascending:false });
+  const { data, error } = await client
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending:false });
 
   if(error){
     console.error("Fehler beim Laden der Aufträge:", error);
@@ -273,13 +311,23 @@ async function loadFromSupabase(){
 }
 
 function showPage(page){
+  if(page === "createOrder" && !canCreateOrder()){
+    return alert("Nur Auftraggeber oder Admins dürfen Aufträge erstellen.");
+  }
+
   document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
-  document.getElementById("page-"+page).classList.remove("hidden");
+
+  const target = document.getElementById("page-"+page);
+  if(target) target.classList.remove("hidden");
+
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
+
   render();
 }
 
-document.querySelectorAll(".nav-btn").forEach(btn => btn.onclick = () => showPage(btn.dataset.page));
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.onclick = () => showPage(btn.dataset.page);
+});
 
 function statusClass(status){
   return "status-" + String(status).replaceAll(" ","");
@@ -297,7 +345,10 @@ function statsData(){
 }
 
 function renderStats(){
-  document.getElementById("stats").innerHTML = statsData().map(([title,value,sub]) => `
+  const stats = document.getElementById("stats");
+  if(!stats) return;
+
+  stats.innerHTML = statsData().map(([title,value,sub]) => `
     <div class="card">
       <div class="muted tiny">${title}</div>
       <div class="stat-value">${value}</div>
@@ -312,12 +363,32 @@ function getFilteredOrders(){
   const city = document.getElementById("cityFilter")?.value || "all";
 
   return state.orders.filter(order => {
-    const hay = [order.title, order.city, order.announcer, order.description, order.assignedPartner, ...(order.interestedPartners||[])].join(" ").toLowerCase();
-    return (!global || hay.includes(global)) && (!search || hay.includes(search)) && (city==="all" || order.city===city);
+    const hay = [
+      order.title,
+      order.city,
+      order.announcer,
+      order.description,
+      order.assignedPartner,
+      ...(order.interestedPartners || [])
+    ].join(" ").toLowerCase();
+
+    return (!global || hay.includes(global)) &&
+           (!search || hay.includes(search)) &&
+           (city === "all" || order.city === city);
   });
 }
 
 function orderCard(order){
+  const assignButton = order.interestedPartners.length > 0 &&
+    !["Vergeben","Abgeschlossen"].includes(order.status) &&
+    canAssignOrder()
+      ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${String(order.interestedPartners[0]).replaceAll("'","\\'")}')">Auftrag vergeben</button>`
+      : "";
+
+  const completeButton = order.status === "Vergeben" && canAssignOrder()
+      ? `<button class="btn btn-outline" onclick="completeOrder('${order.id}')">Als abgeschlossen markieren</button>`
+      : "";
+
   return `
   <div class="order">
     <div class="row">
@@ -344,10 +415,8 @@ function orderCard(order){
     <div class="actions">
       <button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>
       <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
-      ${order.interestedPartners.length > 0 && !["Vergeben","Abgeschlossen"].includes(order.status)
-        ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${String(order.interestedPartners[0]).replaceAll("'","\\'")}')">Auftrag vergeben</button>` : ""}
-      ${order.status==="Vergeben"
-        ? `<button class="btn btn-outline" onclick="completeOrder('${order.id}')">Als abgeschlossen markieren</button>` : ""}
+      ${assignButton}
+      ${completeButton}
     </div>
 
     <div class="chat-box" id="chat-${order.id}">
@@ -367,17 +436,27 @@ function renderOrders(){
   const ordersList = document.getElementById("ordersList");
   const dashboardOrders = document.getElementById("dashboardOrders");
 
-  if(ordersList) ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
-  if(dashboardOrders) dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+  if(ordersList){
+    ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+  }
+
+  if(dashboardOrders){
+    dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+  }
 }
 
 function renderCityFilter(){
   const sel = document.getElementById("cityFilter");
   if(!sel) return;
+
   const current = sel.value || "all";
-  const cities = [...new Set(state.orders.map(o=>o.city))];
+  const cities = [...new Set(state.orders.map(o=>o.city).filter(Boolean))];
+
   sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${c}">${c}</option>`).join("");
-  if([...sel.options].some(o=>o.value===current)) sel.value = current;
+
+  if([...sel.options].some(o=>o.value===current)){
+    sel.value = current;
+  }
 }
 
 function activityBadge(type){
@@ -385,7 +464,10 @@ function activityBadge(type){
 }
 
 function renderDashboardActivities(){
-  document.getElementById("dashboardActivities").innerHTML = state.activities.slice(0,5).map(a => `
+  const wrap = document.getElementById("dashboardActivities");
+  if(!wrap) return;
+
+  wrap.innerHTML = state.activities.slice(0,5).map(a => `
     <div class="timeline-item">
       <div class="row">
         <strong>${a.user}</strong>
@@ -398,13 +480,16 @@ function renderDashboardActivities(){
 }
 
 function renderCalendar(){
+  const wrap = document.getElementById("calendarWrap");
+  if(!wrap) return;
+
   const grouped = {};
   state.activities.forEach(a => {
     if(!grouped[a.date]) grouped[a.date] = [];
     grouped[a.date].push(a);
   });
 
-  document.getElementById("calendarWrap").innerHTML = Object.keys(grouped).sort().reverse().map(date => `
+  wrap.innerHTML = Object.keys(grouped).sort().reverse().map(date => `
     <div class="card" style="margin-bottom:18px">
       <h2 style="margin-top:0">${date}</h2>
       ${grouped[date].map(a => `
@@ -432,19 +517,20 @@ async function sendChatMessage(orderId, sender, recipient, text){
     return false;
   }
 
-  console.log("Nachricht gespeichert");
   return true;
 }
 
 async function loadMessages(orderId){
-  const name = localStorage.getItem("chatName") || "";
+  const name = getChatName();
+  const role = getRole();
+
   let query = client
     .from("messages")
     .select("*")
     .eq("orderRef", String(orderId))
     .order("created_at", { ascending:true });
 
-  if(name && name !== "Auftraggeber"){
+  if(role !== "Auftraggeber" && role !== "Admin" && name){
     query = query.or(`sender.eq.${name},recipient.eq.${name},recipient.eq.Auftraggeber`);
   }
 
@@ -463,7 +549,7 @@ async function renderOrderMessages(orderId){
   if(!container) return;
 
   const messages = await loadMessages(orderId);
-  const myName = localStorage.getItem("chatName") || "Interessent";
+  const myName = getChatName();
 
   if(!messages.length){
     container.innerHTML = `<div class="muted">Keine Nachrichten</div>`;
@@ -471,7 +557,7 @@ async function renderOrderMessages(orderId){
   }
 
   container.innerHTML = messages.map(m => {
-    const isMe = m.sender === myName;
+    const isMe = m.sender === myName || (getRole() === "Auftraggeber" && m.sender === "Auftraggeber");
     return `
       <div style="display:flex;justify-content:${isMe ? "flex-end" : "flex-start"};margin-bottom:8px">
         <div style="
@@ -495,6 +581,10 @@ async function renderOrderMessages(orderId){
 }
 
 function openMessages(orderId){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
   const chat = document.getElementById("chat-" + orderId);
   if(!chat) return;
 
@@ -517,74 +607,138 @@ function openMessages(orderId){
 }
 
 async function handleSend(orderId){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
   const input = document.getElementById("msgInput-" + orderId);
   const text = input.value.trim();
   if(!text) return alert("Bitte Nachricht eingeben.");
 
-  const senderName = getChatName();
-  const role = prompt("Rolle? Interessent oder Auftraggeber?") || "Interessent";
+  const role = getRole();
+  const name = getChatName();
 
-  let sender = senderName;
+  let sender = name;
   let recipient = "Auftraggeber";
 
-  if(role === "Auftraggeber"){
+  if(role === "Auftraggeber" || role === "Admin"){
     sender = "Auftraggeber";
-    recipient = prompt("Antwort an welchen Namen / Firma?") || senderName;
+    recipient = prompt("Antwort an welchen Namen / Firma?") || "Partner";
   }
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
+
   if(success){
     input.value = "";
     await renderOrderMessages(orderId);
   }
 }
 
-function expressInterest(orderId){
-  if(getRole() !== "Interessent"){
-  return alert("Nur Partner dürfen Interesse bekunden.");
-}
+async function expressInterest(orderId){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  if(!canExpressInterest()){
+    return alert("Nur Partner dürfen Interesse bekunden.");
+  }
+
   const order = state.orders.find(o=>String(o.id)===String(orderId));
   if(!order) return;
+
   const partnerName = getChatName();
 
-  if(!order.interestedPartners.includes(partnerName)) order.interestedPartners.push(partnerName);
-  if(order.status==="Offen") order.status = "In Verhandlung";
+  if(!order.interestedPartners.includes(partnerName)){
+    order.interestedPartners.push(partnerName);
+  }
+
+  if(order.status === "Offen"){
+    order.status = "In Verhandlung";
+  }
+
+  const { error } = await client
+    .from("orders")
+    .update({
+      interestedPartners: order.interestedPartners,
+      status: order.status
+    })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Fehler beim Interesse:", error);
+    return alert("Interesse konnte nicht gespeichert werden.");
+  }
 
   addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`);
-  render();
+  await loadFromSupabase();
   alert("Interesse wurde eingetragen.");
 }
 
-function assignOrder(orderId, partnerName){
+async function assignOrder(orderId, partnerName){
+  if(!canAssignOrder()){
+    return alert("Nur Auftraggeber oder Admins dürfen Aufträge vergeben.");
+  }
+
   const order = state.orders.find(o=>String(o.id)===String(orderId));
   if(!order) return;
-  order.assignedPartner = partnerName;
-  order.status = "Vergeben";
+
+  const { error } = await client
+    .from("orders")
+    .update({
+      assignedPartner: partnerName,
+      status: "Vergeben"
+    })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Fehler bei Vergabe:", error);
+    return alert("Auftrag konnte nicht vergeben werden.");
+  }
+
   addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`);
-  render();
+  await loadFromSupabase();
   alert("Auftrag wurde vergeben.");
 }
 
-function completeOrder(orderId){
+async function completeOrder(orderId){
+  if(!canAssignOrder()){
+    return alert("Nur Auftraggeber oder Admins dürfen Aufträge abschließen.");
+  }
+
   const order = state.orders.find(o=>String(o.id)===String(orderId));
   if(!order) return;
-  order.status = "Abgeschlossen";
+
+  const { error } = await client
+    .from("orders")
+    .update({ status: "Abgeschlossen" })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Fehler beim Abschließen:", error);
+    return alert("Auftrag konnte nicht abgeschlossen werden.");
+  }
+
   addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`);
-  render();
+  await loadFromSupabase();
   alert("Auftrag wurde als abgeschlossen markiert.");
 }
 
 async function createOrder(){
-  if(getRole() !== "Auftraggeber"){
-  return alert("Nur Auftraggeber dürfen Aufträge erstellen.");
-}
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  if(!canCreateOrder()){
+    return alert("Nur Auftraggeber oder Admins dürfen Aufträge erstellen.");
+  }
+
   const title = document.getElementById("newTitle").value.trim();
   const city = document.getElementById("newCity").value.trim();
   const price = document.getElementById("newPrice").value.trim();
   const volume = document.getElementById("newVolume").value.trim();
   const date = document.getElementById("newDate").value;
   const description = document.getElementById("newDescription").value.trim() || "Neuer annoncierter Auftrag.";
-  const announcer = document.getElementById("newAnnouncer").value.trim() || "Heinrich Hertz Elektrotechnik GmbH";
+  const announcer = document.getElementById("newAnnouncer").value.trim() || getChatName();
 
   if(!title || !city || !price || !volume || !date){
     return alert("Bitte alle Pflichtfelder ausfüllen.");
@@ -602,19 +756,28 @@ async function createOrder(){
     interestedPartners:[],
     assignedPartner:""
   }]);
-  if (error) {
-  return alert("Fehler beim Speichern");
-}
 
-alert("Auftrag erstellt!");
-render();
+  if(error){
+    console.error("Fehler beim Speichern:", error);
+    return alert("Fehler beim Speichern.");
+  }
+
+  addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
+
+  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+
+  alert("Auftrag erstellt.");
+  await loadFromSupabase();
+  showPage("orders");
 }
 
 async function registerPartner(){
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
   const password = document.getElementById("regPassword").value.trim();
-  const role = document.getElementById("regRole").value.trim() || "Interessent";
+  const role = document.getElementById("regRole").value || "Partner";
 
   if(!name || !email || !password){
     return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
@@ -622,45 +785,30 @@ async function registerPartner(){
 
   const { error } = await client
     .from("partners")
-    .insert([{
-      name,
-      email,
-      password,
-      role
-    }]);
+    .insert([{ name, email, password, role }]);
 
   if(error){
     console.error("Fehler:", error);
     return alert("Registrierung fehlgeschlagen.");
   }
 
-  // 👉 WICHTIG: Name speichern
   localStorage.setItem("chatName", name);
   localStorage.setItem("role", role);
 
-  document.getElementById("currentUserName").innerText = name;
-
+  updateNameDisplay();
   addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
 
-  ["regName","regEmail","regPassword","regRole"].forEach(id => {
+  ["regName","regEmail","regPassword"].forEach(id => {
     document.getElementById(id).value = "";
   });
 
-  alert("Registrierung erfolgreich!");
-
+  alert("Registrierung erfolgreich.");
   showPage("dashboard");
 }
-function render(){
-  updateNameDisplay();
-  renderStats();
-  renderCityFilter();
-  renderOrders();
-  renderDashboardActivities();
-  renderCalendar();
-}
-async function loginPartner(){
-  const email = prompt("E-Mail:");
-  const password = prompt("Passwort:");
+
+async function login(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
 
   if(!email || !password){
     return alert("Bitte E-Mail und Passwort eingeben.");
@@ -674,43 +822,33 @@ async function loginPartner(){
     .single();
 
   if(error || !data){
+    console.error("Login Fehler:", error);
     return alert("Login fehlgeschlagen.");
-  }
-  async function login() {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-
-  const { data, error } = await client
-    .from("partners")
-    .select("*")
-    .eq("email", email)
-    .eq("password", password)
-    .single();
-
-  if (error || !data) {
-    return alert("Login fehlgeschlagen");
   }
 
   localStorage.setItem("chatName", data.name);
   localStorage.setItem("role", data.role);
 
-  document.getElementById("currentUserName").innerText = data.name;
-document.getElementById("currentUserRole").innerText = data.role;
-  alert("Login erfolgreich");
-  render();
+  updateNameDisplay();
+
+  alert("Login erfolgreich.");
+  showPage("dashboard");
 }
 
-  
+function render(){
+  updateNameDisplay();
+  renderStats();
+  renderCityFilter();
+  renderOrders();
+  renderDashboardActivities();
+  renderCalendar();
+}
+
 document.getElementById("globalSearch").addEventListener("input", render);
 document.getElementById("orderSearch").addEventListener("input", render);
 document.getElementById("cityFilter").addEventListener("change", render);
 
-  if(localStorage.getItem("chatName")){
-  document.getElementById("currentUserName").innerText = localStorage.getItem("chatName");
-  document.getElementById("currentUserRole").innerText = localStorage.getItem("role");
-}
-const el = document.getElementById("currentUserName");
-if (el) el.innerText = localStorage.getItem("chatName") || "Nicht gesetzt";
+updateNameDisplay();
 loadFromSupabase();
 </script>
 </body>
