@@ -99,6 +99,19 @@
       font-weight:700;
     }
 
+    .nav-badge{
+      float:right;
+      min-width:22px;
+      height:22px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:#f97316;
+      color:white;
+      font-size:12px;
+      text-align:center;
+      display:none;
+    }
+
     .sidebar-note{
       margin-top:20px;
       padding:16px;
@@ -251,6 +264,27 @@
 
     .interest-row:first-of-type{border-top:none}
 
+    .notice-box{
+      padding:14px;
+      border-radius:18px;
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      margin-bottom:14px;
+    }
+
+    .application-box{
+      padding:14px;
+      border-radius:18px;
+      background:#f8fbff;
+      border:1px solid var(--border);
+      margin-bottom:12px;
+    }
+
+    .recipient-select{
+      max-width:240px;
+      border-radius:999px;
+    }
+
     .actions{
       display:flex;
       gap:10px;
@@ -317,7 +351,8 @@
 
     <button class="nav-btn active" data-page="dashboard">Dashboard</button>
     <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
-    <button class="nav-btn" data-page="myOrders">Meine Aufträge</button>
+    <button class="nav-btn" data-page="myOrders">Meine Aufträge <span id="myOrdersNavBadge" class="nav-badge"></span></button>
+    <button class="nav-btn" data-page="applications">Meine Bewerbungen <span id="applicationsNavBadge" class="nav-badge"></span></button>
     <button class="nav-btn" data-page="createOrder">Auftrag vergeben</button>
     <button class="nav-btn" data-page="admin">Admin-Kalender</button>
     <button class="nav-btn" data-page="register">Registrierung / Login</button>
@@ -394,6 +429,14 @@
         <h2 style="margin-top:0">Meine Aufträge</h2>
         <div class="muted" style="margin-bottom:14px">Alle von dir annoncierten Aufträge inklusive Interessentenliste und Vergabe-Buttons.</div>
         <div id="myOrdersList"></div>
+      </div>
+    </section>
+
+    <section id="page-applications" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Meine Bewerbungen</h2>
+        <div class="muted" style="margin-bottom:14px">Alle Aufträge, bei denen du Interesse bekundet hast.</div>
+        <div id="applicationsList"></div>
       </div>
     </section>
 
@@ -624,11 +667,39 @@ function myOrders(){
   return state.orders.filter(order => isOwnOrder(order));
 }
 
-function statsData(){
-  const own = myOrders();
-  const ownOpenInterests = own
+function myApplications(){
+  const name = getChatName();
+  if(!name) return [];
+  return state.orders.filter(order => (order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(name)));
+}
+
+function pendingInterestCount(){
+  return myOrders()
     .filter(o => !["Vergeben","Abgeschlossen"].includes(o.status))
     .reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0);
+}
+
+function updateNavBadges(){
+  const myOrdersBadge = document.getElementById("myOrdersNavBadge");
+  const applicationsBadge = document.getElementById("applicationsNavBadge");
+
+  const interestCount = pendingInterestCount();
+  const applicationCount = myApplications().length;
+
+  if(myOrdersBadge){
+    myOrdersBadge.style.display = interestCount ? "inline-block" : "none";
+    myOrdersBadge.innerText = interestCount;
+  }
+
+  if(applicationsBadge){
+    applicationsBadge.style.display = applicationCount ? "inline-block" : "none";
+    applicationsBadge.innerText = applicationCount;
+  }
+}
+
+function statsData(){
+  const own = myOrders();
+  const ownOpenInterests = pendingInterestCount();
 
   return [
     ["Offene Aufträge", state.orders.filter(o=>o.status==="Offen").length, "Aktuell annoncierte Aufträge"],
@@ -738,6 +809,14 @@ function interestedPartnersHtml(order){
 function orderCard(order){
   const own = isOwnOrder(order);
   const hasMyInterest = (order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(getChatName()));
+  const partners = order.interestedPartners || [];
+  const recipientOptions = partners.map(p => `<option value="${escapeText(p)}">${escapeText(p)}</option>`).join("");
+  const ownerRecipientSelect = own || isAdmin()
+    ? `<select id="recipient-${order.id}" class="recipient-select">
+         <option value="">Empfänger wählen</option>
+         ${recipientOptions}
+       </select>`
+    : "";
 
   const interestButton = canExpressInterest(order)
     ? hasMyInterest
@@ -791,11 +870,41 @@ function orderCard(order){
       <div class="chat-list" id="messages-${order.id}"></div>
 
       <div class="chat-input-row">
+        ${ownerRecipientSelect}
         <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
         <button class="btn btn-primary" onclick="handleSend('${order.id}')">Senden</button>
       </div>
     </div>
   </div>`;
+}
+
+function applicationCard(order){
+  const isAssignedToMe = normalizeName(order.assignedPartner) === normalizeName(getChatName());
+  return `
+    <div class="application-box">
+      <div class="row">
+        <div>
+          <strong>${escapeText(order.title)}</strong><br>
+          <span class="muted tiny">${escapeText(order.city)} · Auftraggeber: ${escapeText(order.announcer)}</span>
+        </div>
+        <span class="badge ${statusClass(order.status)}">${escapeText(order.status)}</span>
+      </div>
+      <div style="margin-top:10px">
+        ${isAssignedToMe ? `<span class="badge" style="background:#dcfce7;color:#166534">An dich vergeben</span>` : `<span class="muted">Dein Interesse wurde an den Auftraggeber übermittelt.</span>`}
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
+      </div>
+      <div class="chat-box" id="chat-${order.id}">
+        <div style="font-weight:700;margin-bottom:8px">Nachrichten</div>
+        <div class="chat-list" id="messages-${order.id}"></div>
+        <div class="chat-input-row">
+          <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
+          <button class="btn btn-primary" onclick="handleSend('${order.id}')">Senden</button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderOrders(){
@@ -804,6 +913,7 @@ function renderOrders(){
   const dashboardOrders = document.getElementById("dashboardOrders");
   const myOrdersList = document.getElementById("myOrdersList");
   const dashboardMyOrders = document.getElementById("dashboardMyOrders");
+  const applicationsList = document.getElementById("applicationsList");
 
   if(ordersList){
     ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
@@ -820,6 +930,11 @@ function renderOrders(){
 
   if(dashboardMyOrders){
     dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || `<div class="muted">Du hast noch keine eigenen Aufträge annonciert.</div>`;
+  }
+
+  const apps = myApplications();
+  if(applicationsList){
+    applicationsList.innerHTML = apps.map(applicationCard).join("") || `<div class="muted">Du hast noch keine Interessenbekundungen abgegeben.</div>`;
   }
 }
 
@@ -989,7 +1104,13 @@ function messageInterestedPartner(orderId, partnerName){
   }
 
   setTimeout(() => {
+    const select = document.getElementById("recipient-" + orderId);
     const input = document.getElementById("msgInput-" + orderId);
+
+    if(select){
+      select.value = partnerName;
+    }
+
     if(input){
       input.placeholder = "Nachricht an " + partnerName + " schreiben...";
       input.focus();
@@ -1040,7 +1161,12 @@ async function handleSend(orderId){
 
   // Wenn der Auftraggeber schreibt, geht die Nachricht gezielt an den gewählten Interessenten.
   if(order && isOwnOrder(order)){
-    recipient = replyTargets[orderId] || prompt("Antwort an welchen Interessenten?") || "Partner";
+    const select = document.getElementById("recipient-" + orderId);
+    recipient = (select && select.value) || replyTargets[orderId] || "";
+
+    if(!recipient){
+      return alert("Bitte zuerst einen Interessenten als Empfänger auswählen.");
+    }
   }
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
@@ -1257,6 +1383,7 @@ async function login(){
 
 function render(){
   updateNameDisplay();
+  updateNavBadges();
   renderStats();
   renderCityFilter();
   renderOrders();
