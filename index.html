@@ -469,6 +469,7 @@ let state = {
 };
 
 const refreshTimers = {};
+const replyTargets = {}; // merkt sich: Auftraggeber antwortet gezielt an diesen Interessenten
 
 function getRole(){
   return localStorage.getItem("role") || "";
@@ -625,7 +626,9 @@ function myOrders(){
 
 function statsData(){
   const own = myOrders();
-  const ownOpenInterests = own.reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0);
+  const ownOpenInterests = own
+    .filter(o => !["Vergeben","Abgeschlossen"].includes(o.status))
+    .reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0);
 
   return [
     ["Offene Aufträge", state.orders.filter(o=>o.status==="Offen").length, "Aktuell annoncierte Aufträge"],
@@ -713,7 +716,10 @@ function interestedPartnersHtml(order){
               <strong>${escapeText(partner)}</strong><br>
               <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
             </div>
-            ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-outline" onclick="messageInterestedPartner('${order.id}', '${jsArg(partner)}')">Nachricht schreiben</button>
+              ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
+            </div>
           </div>
         `).join("")}
       </div>
@@ -839,7 +845,22 @@ function renderDashboardActivities(){
   const wrap = document.getElementById("dashboardActivities");
   if(!wrap) return;
 
-  wrap.innerHTML = state.activities.slice(0,5).map(a => `
+  const ownInterestedOrders = myOrders().filter(o => (o.interestedPartners || []).length > 0 && !["Vergeben","Abgeschlossen"].includes(o.status));
+
+  const notificationHtml = ownInterestedOrders.length ? `
+    <div class="timeline-item" style="background:#fff7ed;border-color:#fed7aa">
+      <div class="row">
+        <strong>Neue Interessenten</strong>
+        <span class="badge interest-badge">${ownInterestedOrders.reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0)}</span>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        Für deine Aufträge gibt es Interessenten. Öffne „Meine Aufträge“, um sie zu sehen und direkt anzuschreiben.
+      </div>
+      <button class="btn btn-outline" style="margin-top:10px" onclick="showPage('myOrders')">Meine Aufträge öffnen</button>
+    </div>
+  ` : "";
+
+  const activityHtml = state.activities.slice(0,5).map(a => `
     <div class="timeline-item">
       <div class="row">
         <strong>${escapeText(a.user)}</strong>
@@ -849,6 +870,8 @@ function renderDashboardActivities(){
       <div class="muted" style="margin-top:10px">${escapeText(a.details)}</div>
     </div>
   `).join("");
+
+  wrap.innerHTML = notificationHtml + activityHtml;
 }
 
 function renderCalendar(){
@@ -951,6 +974,29 @@ async function renderOrderMessages(orderId){
   container.scrollTop = container.scrollHeight;
 }
 
+function messageInterestedPartner(orderId, partnerName){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  replyTargets[orderId] = partnerName;
+
+  const chat = document.getElementById("chat-" + orderId);
+  if(chat && chat.style.display !== "block"){
+    openMessages(orderId);
+  } else {
+    renderOrderMessages(orderId);
+  }
+
+  setTimeout(() => {
+    const input = document.getElementById("msgInput-" + orderId);
+    if(input){
+      input.placeholder = "Nachricht an " + partnerName + " schreiben...";
+      input.focus();
+    }
+  }, 100);
+}
+
 function openMessages(orderId){
   if(!isLoggedIn()){
     return alert("Bitte zuerst registrieren oder einloggen.");
@@ -992,8 +1038,9 @@ async function handleSend(orderId){
   let sender = name;
   let recipient = order ? order.announcer : "Auftraggeber";
 
+  // Wenn der Auftraggeber schreibt, geht die Nachricht gezielt an den gewählten Interessenten.
   if(order && isOwnOrder(order)){
-    recipient = prompt("Antwort an welchen Interessenten?") || "Partner";
+    recipient = replyTargets[orderId] || prompt("Antwort an welchen Interessenten?") || "Partner";
   }
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
