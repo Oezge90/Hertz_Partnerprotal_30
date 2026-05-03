@@ -686,32 +686,45 @@ function jsArg(value){
 
 function interestedPartnersHtml(order){
   const partners = order.interestedPartners || [];
-  const ownerCanAssign = canAssignOrder(order) && !["Vergeben","Abgeschlossen"].includes(order.status);
+  const ownerOrAdmin = canAssignOrder(order);
+  const currentUserHasInterest = partners.some(p => normalizeName(p) === normalizeName(getChatName()));
+  const ownerCanAssign = ownerOrAdmin && !["Vergeben","Abgeschlossen"].includes(order.status);
 
-  if(!partners.length){
+  // Nur Auftraggeber/Admin sehen die komplette Interessentenliste.
+  if(ownerOrAdmin){
+    if(!partners.length){
+      return `
+        <div class="interest-box">
+          <strong>Interessenten</strong><br>
+          <span class="muted">Noch keine Interessenten.</span>
+        </div>
+      `;
+    }
+
     return `
       <div class="interest-box">
-        <strong>Interessenten</strong><br>
-        <span class="muted">Noch keine Interessenten.</span>
+        <div class="row" style="margin-bottom:8px">
+          <strong>Interessenten (${partners.length})</strong>
+          ${isOwnOrder(order) ? `<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>` : ""}
+        </div>
+        ${partners.map(partner => `
+          <div class="interest-row">
+            <div>
+              <strong>${escapeText(partner)}</strong><br>
+              <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
+            </div>
+            ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
+          </div>
+        `).join("")}
       </div>
     `;
   }
 
+  // Andere Interessenten sehen NICHT, wer sich noch beworben hat.
   return `
     <div class="interest-box">
-      <div class="row" style="margin-bottom:8px">
-        <strong>Interessenten (${partners.length})</strong>
-        ${isOwnOrder(order) ? `<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>` : ""}
-      </div>
-      ${partners.map(partner => `
-        <div class="interest-row">
-          <div>
-            <strong>${escapeText(partner)}</strong><br>
-            <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
-          </div>
-          ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
-        </div>
-      `).join("")}
+      <strong>Interessenten</strong><br>
+      <span class="muted">${currentUserHasInterest ? "Du hast Interesse bekundet. Der Auftraggeber sieht deine Anfrage." : "Interessentenliste nur für den Auftraggeber sichtbar."}</span>
     </div>
   `;
 }
