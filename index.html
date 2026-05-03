@@ -1,98 +1,1598 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const client = createClient(
+      "https://ldnjnhhntdoeyyxygnlc.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbmpuaGhudGRvZXl5eHlnbmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDQ3MzAsImV4cCI6MjA5Mjg4MDczMH0.LY8oW99vg3Df8jobbtl2kqN7MmmDktc3YfBl7u4GQmA"
+    );
+  </script>
 
-<title>Hertz-Partnerportal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-body {
-  font-family: Arial;
-  margin: 0;
-  display: flex;
+  <style>
+    :root{
+      --bg:#f3f9ff;
+      --card:#fff;
+      --primary:#2563eb;
+      --primary-light:#3ba4ff;
+      --accent:#20b486;
+      --text:#1f2d3d;
+      --muted:#6b7a90;
+      --border:#d9ebfb;
+      --warning:#f97316;
+      --danger:#ef4444;
+      --shadow:0 14px 40px rgba(29,93,155,.10);
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,164,255,.20), transparent 30%),
+        linear-gradient(135deg,#eef7ff,#f9fcff,#edf8ff);
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns:270px 1fr;
+      gap:20px;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .sidebar,.panel,.card{
+      background:rgba(255,255,255,.94);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      border-radius:30px;
+    }
+
+    .sidebar{
+      padding:20px;
+      position:sticky;
+      top:20px;
+      height:calc(100vh - 40px);
+      overflow-y:auto;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:24px;
+    }
+
+    .brand-badge{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      box-shadow:0 12px 28px rgba(37,99,235,.25);
+    }
+
+    .brand-logo{
+  width:140px;
+  height:auto;
+  object-fit:contain;
 }
 
-.sidebar {
-  width: 260px;
-  background: #f3f9ff;
-  padding: 20px;
-}
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px}
 
-.content {
-  flex: 1;
-  padding: 30px;
-}
+    .nav-btn{
+      width:100%;
+      text-align:left;
+      border:none;
+      cursor:pointer;
+      padding:14px 16px;
+      border-radius:18px;
+      background:transparent;
+      margin-bottom:8px;
+      font-size:15px;
+      color:var(--text);
+    }
 
-.brand-logo {
-  width: 180px;
-  display: block;
-  margin: auto;
-  margin-bottom: 20px;
-}
+    .nav-btn.active{
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      color:white;
+      font-weight:700;
+      box-shadow:0 10px 22px rgba(37,99,235,.18);
+    }
 
-button {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
+    .nav-btn:hover:not(.active){background:#eef7ff}
 
-.active {
-  background: blue;
-  color: white;
-}
+    .nav-badge{
+      float:right;
+      min-width:22px;
+      height:22px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:#f97316;
+      color:white;
+      font-size:12px;
+      text-align:center;
+      display:none;
+    }
 
-.page {
-  display: none;
-}
+    .sidebar-note{
+      margin-top:20px;
+      padding:16px;
+      border-radius:24px;
+      background:#eef7ff;
+      border:1px solid var(--border);
+      font-size:14px;
+      line-height:1.5;
+    }
 
-.page.active {
-  display: block;
-}
-</style>
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+    }
+
+    .panel,.card{
+      padding:22px 24px;
+    }
+
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    input,select,textarea{
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:14px;
+      outline:none;
+      width:100%;
+      background:white;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    .search-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .search{min-width:280px}
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius:18px;
+      padding:12px 16px;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;box-shadow:0 10px 20px rgba(37,99,235,.16)}
+    .btn-success{background:var(--accent);color:white;box-shadow:0 10px 20px rgba(32,180,134,.14)}
+    .btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
+    .btn-danger{background:#fee2e2;color:#991b1b}
+    .btn:hover{transform:translateY(-1px)}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:14px;
+    }
+
+    .hero{
+      padding:28px;
+      border-radius:30px;
+      background:linear-gradient(135deg,#ffffff 0%,#eef7ff 100%);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      margin-bottom:20px;
+    }
+
+    .hero-title{
+      font-size:34px;
+      line-height:1.1;
+      margin:0 0 10px;
+      letter-spacing:-.02em;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.3fr .7fr;
+      gap:18px;
+      align-items:center;
+    }
+
+    .hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:white;
+      border:1px solid var(--border);
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .empty-state{
+      padding:22px;
+      border:1px dashed var(--border);
+      border-radius:22px;
+      background:#f8fcff;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .stat-value{
+      font-size:28px;
+      font-weight:700;
+      margin:8px 0 4px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1.35fr .95fr;
+      gap:20px;
+    }
+
+    .order{
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:18px;
+      margin-bottom:14px;
+      background:white;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .status-Offen{background:#e3f2ff;color:#1f78c8}
+    .status-InVerhandlung{background:#fff3d6;color:#9a6700}
+    .status-Vergeben{background:#dbf7ec;color:#06754f}
+    .status-Abgeschlossen{background:#eceff3;color:#506072}
+    .owner-badge{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .interest-badge{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin:16px 0;
+      font-size:14px;
+    }
+
+    .info-box{
+      padding:14px;
+      border-radius:18px;
+      background:#f5fbff;
+      border:1px solid var(--border);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .interest-box{
+      margin-top:12px;
+      padding:14px;
+      border-radius:18px;
+      background:#fffdf6;
+      border:1px solid #fde68a;
+    }
+
+    .interest-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 0;
+      border-top:1px solid #fde68a;
+    }
+
+    .interest-row:first-of-type{border-top:none}
+
+    .notice-box{
+      padding:14px;
+      border-radius:18px;
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      margin-bottom:14px;
+    }
+
+    .application-box{
+      padding:14px;
+      border-radius:18px;
+      background:#f8fbff;
+      border:1px solid var(--border);
+      margin-bottom:12px;
+    }
+
+    .recipient-select{
+      max-width:240px;
+      border-radius:999px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .timeline-item{
+      padding:14px;
+      border-radius:18px;
+      background:#f8fbff;
+      border:1px solid var(--border);
+      margin-bottom:10px;
+    }
+
+    .hidden{display:none}
+
+    .two-col{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .chat-box{
+      display:none;
+      margin-top:14px;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#f8fcff;
+    }
+
+    .chat-list{
+      max-height:360px;
+      overflow-y:auto;
+      padding:6px;
+    }
+
+    .chat-input-row{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+    }
+
+    .chat-input-row input{border-radius:999px}
+
+    @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
+    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.meta,.two-col,.stats{grid-template-columns:1fr}.search{min-width:100%}}
+  </style>
 </head>
 
 <body>
-
-<div class="sidebar">
-  <img src="logo.png" class="brand-logo">
-
-  <button onclick="showPage('dashboard')">Dashboard</button>
-  <button onclick="showPage('orders')">Aufträge entdecken</button>
-  <button onclick="showPage('profile')">Firmenprofil</button>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand" style="justify-content:center;">
+  <img src="logo.png" class="brand-logo" alt="Logo">
 </div>
 
-<div class="content">
+    <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
+    <button class="nav-btn" data-page="myOrders">Meine Aufträge <span id="myOrdersNavBadge" class="nav-badge"></span></button>
+    <button class="nav-btn" data-page="applications">Meine Bewerbungen <span id="applicationsNavBadge" class="nav-badge"></span></button>
+    <button class="nav-btn" data-page="profile">Firmenprofil</button>
+    <button class="nav-btn" data-page="createOrder">Auftrag vergeben</button>
+    <button class="nav-btn" data-page="admin">Admin-Kalender</button>
+    <button class="nav-btn" data-page="register">Registrierung / Login</button>
 
-  <div id="dashboard" class="page active">
-    <h1>Hertz-Partnerportal</h1>
-    <p>Partnernetzwerk & Auftragsvergabe</p>
+    <div class="sidebar-note">
+      <strong>Admin-Hinweis</strong><br>
+      Registrierungen, Interessensbekundungen, Vergaben, Nachrichten und Statusänderungen werden protokolliert.
+      <hr style="margin:10px 0;">
+      <div style="font-size:12px;color:#666">Angemeldet als:</div>
+      <div id="currentUserName" style="font-weight:bold;margin-bottom:4px"></div>
+      <div id="currentUserRole" style="font-size:12px;color:#666;margin-bottom:8px"></div>
+      <button class="btn btn-outline" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <section class="panel">
+    <div class="panel-head">
+  <div>
+    <h1 style="margin:0 0 6px">Hertz-Partnerportal</h1>
+    <div class="muted" style="font-size:16px;margin-bottom:4px">
+      Partnernetzwerk & Auftragsvergabe
+    </div>
   </div>
 
-  <div id="orders" class="page">
-    <h1>Aufträge entdecken</h1>
+  <div class="search-row">
+    <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
+    <button class="btn btn-primary" onclick="showPage('orders')">Aufträge finden</button>
+    <button class="btn btn-success" onclick="showPage('createOrder')">Auftrag vergeben</button>
   </div>
+</div>  
+    </section>
 
-  <div id="profile" class="page">
-    <h1>Firmenprofil</h1>
-  </div>
+    <section id="page-dashboard" class="page">
+      <div class="hero">
+        <div class="hero-grid">
+          <div>
+            <h2 class="hero-title">Aufträge finden, Partner verbinden, Vergaben sauber steuern.</h2>
+            <div class="muted">Das Hertz-Partnerportal bündelt Auftragsvergabe, Interessentenmanagement und direkte Kommunikation in einer Oberfläche.</div>
+            <div class="hero-pills">
+              <span class="pill">✅ Partnernetzwerk</span>
+              <span class="pill">💬 Direktchat</span>
+              <span class="pill">📌 Interessentenlisten</span>
+              <span class="pill">🔒 Rollenlogik</span>
+            </div>
+          </div>
+          <div class="info-box">
+            <strong>Schnellstart</strong><br>
+            1. Einloggen<br>
+            2. Auftrag annoncieren oder Interesse bekunden<br>
+            3. Über „Meine Aufträge“ Interessenten verwalten
+          </div>
+        </div>
+      </div>
 
+      <div class="stats" id="stats"></div>
+
+      <div class="grid-2" style="margin-top:20px">
+        <div class="card">
+          <h2 style="margin-top:0">Auftragssuchende sehen annoncierte Aufträge</h2>
+          <div class="muted" style="margin-bottom:14px">
+            Jeder Partner kann Aufträge annoncieren und Interesse an Aufträgen anderer Partner bekunden.
+          </div>
+          <div id="dashboardOrders"></div>
+          <button class="btn btn-outline" onclick="showPage('orders')">Alle Aufträge ansehen</button>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0">Meine Aufträge mit Interessenten</h2>
+          <div class="muted" style="margin-bottom:14px">Hier sieht der Auftragsersteller sofort, wer Interesse bekundet hat.</div>
+          <div id="dashboardMyOrders"></div>
+          <button class="btn btn-outline" onclick="showPage('myOrders')">Meine Aufträge öffnen</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-orders" class="page hidden">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2 style="margin-top:0">Aufträge entdecken</h2>
+            <div class="muted">Offene Aufträge, Interesse, Chat und Vergabe.</div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input id="orderSearch" placeholder="Aufträge durchsuchen" style="width:240px">
+            <select id="cityFilter" style="width:190px"></select>
+          </div>
+        </div>
+
+        <div id="ordersList" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <section id="page-myOrders" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Meine Aufträge</h2>
+        <div class="muted" style="margin-bottom:14px">Alle von dir annoncierten Aufträge inklusive Interessentenliste und Vergabe-Buttons.</div>
+        <div id="myOrdersList"></div>
+      </div>
+    </section>
+
+    <section id="page-applications" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Meine Bewerbungen</h2>
+        <div class="muted" style="margin-bottom:14px">Behalte im Blick, wo du dich beworben hast und ob ein Auftrag bereits an dich vergeben wurde.</div>
+        <div id="applicationsList"></div>
+      </div>
+    </section>
+
+    <section id="page-profile" class="page hidden">
+      <div class="card" style="max-width:900px">
+        <h2 style="margin-top:0">Firmenprofil</h2>
+        <div class="muted" style="margin-bottom:14px">Dieses Profil hilft Auftraggebern und Partnern, dein Unternehmen besser einzuschätzen.</div>
+
+        <div class="two-col">
+          <input id="profileCompany" placeholder="Firmenname">
+          <input id="profileLocation" placeholder="Standort">
+          <input id="profilePhone" placeholder="Telefon">
+          <input id="profileEmail" placeholder="Kontakt-E-Mail">
+          <input id="profileServices" placeholder="Leistungen, z. B. DGUV, Geräteprüfung, Anlagenprüfung">
+          <input id="profileWebsite" placeholder="Website">
+        </div>
+
+        <div style="margin-top:14px">
+          <textarea id="profileDescription" placeholder="Kurzbeschreibung des Unternehmens"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-success" onclick="saveProfile()">Profil speichern</button>
+          <button class="btn btn-outline" onclick="loadProfileIntoForm()">Profil neu laden</button>
+        </div>
+
+        <div style="margin-top:20px">
+          <h3>Profilvorschau</h3>
+          <div id="profilePreview" class="info-box"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-createOrder" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Neuen Auftrag einstellen</h2>
+        <div class="muted" style="margin-bottom:14px">Jeder eingeloggte Partner darf Aufträge annoncieren.</div>
+
+        <div class="two-col">
+          <input id="newTitle" placeholder="Auftragstitel">
+          <input id="newCity" placeholder="Ausführungsort">
+          <input id="newPrice" placeholder="Preis in Euro">
+          <input id="newVolume" placeholder="Auftragsvolumen">
+          <input id="newDate" type="date">
+          <input id="newAnnouncer" placeholder="Annoncierender Partner / Firma">
+        </div>
+
+        <div style="margin-top:14px">
+          <textarea id="newDescription" placeholder="Beschreibung"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-success" onclick="createOrder()">Auftrag veröffentlichen</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-admin" class="page hidden">
+      <div id="calendarWrap"></div>
+    </section>
+
+    <section id="page-register" class="page hidden">
+      <div class="card" style="max-width:760px">
+        <h2 style="margin-top:0">Partner-Registrierung</h2>
+
+        <div class="two-col">
+          <input id="regName" placeholder="Unternehmen / Ansprechpartner">
+          <input id="regEmail" placeholder="E-Mail-Adresse">
+          <input id="regPassword" type="password" placeholder="Passwort">
+          <select id="regRole">
+            <option value="Partner">Partner</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="registerPartner()">Registrieren</button>
+        </div>
+
+        <h2 style="margin-top:30px">Login</h2>
+
+        <div class="two-col">
+          <input id="loginEmail" placeholder="E-Mail">
+          <input id="loginPassword" type="password" placeholder="Passwort">
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="login()">Login</button>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script>
-function showPage(pageId) {
-  const pages = document.querySelectorAll(".page");
-  pages.forEach(p => p.classList.remove("active"));
+let state = {
+  orders: [],
+  activities: [
+    {id:1,date:"2026-04-23",time:"08:30",type:"Registrierung",user:"Baran Alagöz",details:"Neuer Partner registriert und Profil vervollständigt."},
+    {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg veröffentlicht."},
+    {id:3,date:"2026-04-24",time:"11:40",type:"Interesse bekundet",user:"Nordlicht Prüfservice",details:"Partner hat Interesse an einem Auftrag in Hamburg bekundet."}
+  ]
+};
 
-  const target = document.getElementById(pageId);
-  if (target) {
-    target.classList.add("active");
+const refreshTimers = {};
+const replyTargets = {}; // merkt sich: Auftraggeber antwortet gezielt an diesen Interessenten
+
+function getRole(){
+  return localStorage.getItem("role") || "";
+}
+
+function getChatName(){
+  return localStorage.getItem("chatName") || "";
+}
+
+function normalizeName(name){
+  return String(name || "").trim().toLowerCase();
+}
+
+function isLoggedIn(){
+  return !!localStorage.getItem("chatName");
+}
+
+function isAdmin(){
+  return getRole() === "Admin";
+}
+
+function canCreateOrder(){
+  return isLoggedIn();
+}
+
+function isOwnOrder(order){
+  if(!order) return false;
+  return normalizeName(order.announcer) === normalizeName(getChatName());
+}
+
+function canExpressInterest(order){
+  if(!isLoggedIn()) return false;
+  if(!order) return false;
+  return !isOwnOrder(order);
+}
+
+function canAssignOrder(order){
+  if(!isLoggedIn()) return false;
+  if(isAdmin()) return true;
+  return isOwnOrder(order);
+}
+
+function updateNameDisplay(){
+  const nameEl = document.getElementById("currentUserName");
+  const roleEl = document.getElementById("currentUserRole");
+
+  if(nameEl){
+    nameEl.innerText = localStorage.getItem("chatName") || "Nicht eingeloggt";
+  }
+
+  if(roleEl){
+    roleEl.innerText = localStorage.getItem("role") || "";
+  }
+
+  const announcerInput = document.getElementById("newAnnouncer");
+  if(announcerInput && isLoggedIn() && !announcerInput.value){
+    announcerInput.value = getChatName();
+  }
+
+  renderProfilePreview();
+}
+
+function logout(){
+  localStorage.removeItem("chatName");
+  localStorage.removeItem("role");
+  updateNameDisplay();
+  render();
+  alert("Du wurdest ausgeloggt.");
+}
+
+function nowTime(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+
+function todayDate(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function addActivity(type,user,details){
+  state.activities.unshift({
+    id:Date.now(),
+    date:todayDate(),
+    time:nowTime(),
+    type,
+    user,
+    details
+  });
+}
+
+async function loadFromSupabase(){
+  const { data, error } = await client
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.error("Fehler beim Laden der Aufträge:", error);
+    state.orders = [];
+    render();
+    return;
+  }
+
+  state.orders = (data || []).map(order => ({
+    id: order.id,
+    title: order.title || "Ohne Titel",
+    city: order.city || "Ohne Ort",
+    price: order.price || 0,
+    volume: order.volume || "Nicht angegeben",
+    date: order.date || "",
+    announcer: order.announcer || "Unbekannt",
+    status: order.status || "Offen",
+    description: order.description || "Keine Beschreibung vorhanden.",
+    interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
+    assignedPartner: order.assignedPartner || ""
+  }));
+
+  render();
+}
+
+function showPage(page){
+  if(page === "createOrder" && !isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  if((page === "myOrders" || page === "applications" || page === "profile") && !isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+
+  const target = document.getElementById("page-"+page);
+  if(target) target.classList.remove("hidden");
+
+  document.querySelectorAll(".nav-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.page === page);
+  });
+
+  if(page === "profile"){
+    loadProfileIntoForm();
+  }
+
+  render();
+}
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.onclick = () => showPage(btn.dataset.page);
+});
+
+function statusClass(status){
+  return "status-" + String(status).replaceAll(" ","");
+}
+
+function profileKey(){
+  return "companyProfile_" + normalizeName(getChatName());
+}
+
+function getProfile(){
+  if(!isLoggedIn()) return null;
+  try{
+    return JSON.parse(localStorage.getItem(profileKey()) || "null");
+  }catch(e){
+    return null;
   }
 }
-</script>
 
+function saveProfile(){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const profile = {
+    company: document.getElementById("profileCompany").value.trim() || getChatName(),
+    location: document.getElementById("profileLocation").value.trim(),
+    phone: document.getElementById("profilePhone").value.trim(),
+    email: document.getElementById("profileEmail").value.trim(),
+    services: document.getElementById("profileServices").value.trim(),
+    website: document.getElementById("profileWebsite").value.trim(),
+    description: document.getElementById("profileDescription").value.trim()
+  };
+
+  localStorage.setItem(profileKey(), JSON.stringify(profile));
+  renderProfilePreview();
+  alert("Firmenprofil gespeichert.");
+}
+
+function loadProfileIntoForm(){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const profile = getProfile() || { company:getChatName(), location:"", phone:"", email:"", services:"", website:"", description:"" };
+
+  const fields = {
+    profileCompany: profile.company || getChatName(),
+    profileLocation: profile.location || "",
+    profilePhone: profile.phone || "",
+    profileEmail: profile.email || "",
+    profileServices: profile.services || "",
+    profileWebsite: profile.website || "",
+    profileDescription: profile.description || ""
+  };
+
+  Object.entries(fields).forEach(([id,value]) => {
+    const el = document.getElementById(id);
+    if(el) el.value = value;
+  });
+
+  renderProfilePreview();
+}
+
+function renderProfilePreview(){
+  const preview = document.getElementById("profilePreview");
+  if(!preview) return;
+
+  if(!isLoggedIn()){
+    preview.innerHTML = `<span class="muted">Bitte einloggen, um dein Firmenprofil zu bearbeiten.</span>`;
+    return;
+  }
+
+  const profile = getProfile() || { company:getChatName() };
+  preview.innerHTML = `
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px">${escapeText(profile.company || getChatName())}</div>
+    <div class="muted" style="margin-bottom:10px">${escapeText(profile.description || "Noch keine Beschreibung hinterlegt.")}</div>
+    <div><strong>Standort:</strong> ${escapeText(profile.location || "Nicht angegeben")}</div>
+    <div><strong>Leistungen:</strong> ${escapeText(profile.services || "Nicht angegeben")}</div>
+    <div><strong>Telefon:</strong> ${escapeText(profile.phone || "Nicht angegeben")}</div>
+    <div><strong>E-Mail:</strong> ${escapeText(profile.email || "Nicht angegeben")}</div>
+    <div><strong>Website:</strong> ${escapeText(profile.website || "Nicht angegeben")}</div>
+  `;
+}
+
+function myOrders(){
+  const name = getChatName();
+  if(!name) return [];
+  return state.orders.filter(order => isOwnOrder(order));
+}
+
+function myApplications(){
+  const name = getChatName();
+  if(!name) return [];
+  return state.orders.filter(order => (order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(name)));
+}
+
+function pendingInterestCount(){
+  return myOrders()
+    .filter(o => !["Vergeben","Abgeschlossen"].includes(o.status))
+    .reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0);
+}
+
+function updateNavBadges(){
+  const myOrdersBadge = document.getElementById("myOrdersNavBadge");
+  const applicationsBadge = document.getElementById("applicationsNavBadge");
+
+  const interestCount = pendingInterestCount();
+  const applicationCount = myApplications().length;
+
+  if(myOrdersBadge){
+    myOrdersBadge.style.display = interestCount ? "inline-block" : "none";
+    myOrdersBadge.innerText = interestCount;
+  }
+
+  if(applicationsBadge){
+    applicationsBadge.style.display = applicationCount ? "inline-block" : "none";
+    applicationsBadge.innerText = applicationCount;
+  }
+}
+
+function statsData(){
+  const own = myOrders();
+  const ownOpenInterests = pendingInterestCount();
+
+  return [
+    ["Offene Aufträge", state.orders.filter(o=>o.status==="Offen").length, "Aktuell annoncierte Aufträge"],
+    ["In Verhandlung", state.orders.filter(o=>o.status==="In Verhandlung").length, "Mit Interessenten"],
+    ["Vergeben", state.orders.filter(o=>o.status==="Vergeben").length, "An Partner zugeteilt"],
+    ["Meine Aufträge", own.length, "Von dir annonciert"],
+    ["Interessenten", ownOpenInterests, "Für deine Aufträge"],
+    ["Aktivitäten", state.activities.length, "Für Admin protokolliert"]
+  ];
+}
+
+function renderStats(){
+  const stats = document.getElementById("stats");
+  if(!stats) return;
+
+  stats.innerHTML = statsData().map(([title,value,sub]) => `
+    <div class="card">
+      <div class="muted tiny">${title}</div>
+      <div class="stat-value">${value}</div>
+      <div class="muted tiny">${sub}</div>
+    </div>
+  `).join("");
+}
+
+function getFilteredOrders(){
+  const global = (document.getElementById("globalSearch")?.value || "").toLowerCase();
+  const search = (document.getElementById("orderSearch")?.value || "").toLowerCase();
+  const city = document.getElementById("cityFilter")?.value || "all";
+
+  return state.orders.filter(order => {
+    const hay = [
+      order.title,
+      order.city,
+      order.announcer,
+      order.description,
+      order.assignedPartner,
+      ...(order.interestedPartners || [])
+    ].join(" ").toLowerCase();
+
+    return (!global || hay.includes(global)) &&
+           (!search || hay.includes(search)) &&
+           (city === "all" || order.city === city);
+  });
+}
+
+function escapeText(value){
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function jsArg(value){
+  return String(value || "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+}
+
+function interestedPartnersHtml(order){
+  const partners = order.interestedPartners || [];
+  const ownerOrAdmin = canAssignOrder(order);
+  const currentUserHasInterest = partners.some(p => normalizeName(p) === normalizeName(getChatName()));
+  const ownerCanAssign = ownerOrAdmin && !["Vergeben","Abgeschlossen"].includes(order.status);
+
+  // Nur Auftraggeber/Admin sehen die komplette Interessentenliste.
+  if(ownerOrAdmin){
+    if(!partners.length){
+      return `
+        <div class="interest-box">
+          <strong>Interessenten</strong><br>
+          <span class="muted">Noch keine Interessenten.</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="interest-box">
+        <div class="row" style="margin-bottom:8px">
+          <strong>Interessenten (${partners.length})</strong>
+          ${isOwnOrder(order) ? `<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>` : ""}
+        </div>
+        ${partners.map(partner => `
+          <div class="interest-row">
+            <div>
+              <strong>${escapeText(partner)}</strong><br>
+              <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-outline" onclick="messageInterestedPartner('${order.id}', '${jsArg(partner)}')">Nachricht schreiben</button>
+              ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // Andere Interessenten sehen NICHT, wer sich noch beworben hat.
+  return `
+    <div class="interest-box">
+      <strong>Interessenten</strong><br>
+      <span class="muted">${currentUserHasInterest ? "Du hast Interesse bekundet. Der Auftraggeber sieht deine Anfrage." : "Interessentenliste nur für den Auftraggeber sichtbar."}</span>
+    </div>
+  `;
+}
+
+function orderCard(order){
+  const own = isOwnOrder(order);
+  const hasMyInterest = (order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(getChatName()));
+  const partners = order.interestedPartners || [];
+  const recipientOptions = partners.map(p => `<option value="${escapeText(p)}">${escapeText(p)}</option>`).join("");
+  const ownerRecipientSelect = own || isAdmin()
+    ? `<select id="recipient-${order.id}" class="recipient-select">
+         <option value="">Empfänger wählen</option>
+         ${recipientOptions}
+       </select>`
+    : "";
+
+  const interestButton = canExpressInterest(order)
+    ? hasMyInterest
+      ? `<button class="btn btn-outline" disabled>Interesse bereits bekundet</button>`
+      : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`
+    : own
+      ? `<button class="btn btn-outline" disabled>Eigener Auftrag</button>`
+      : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`;
+
+  const completeButton = order.status === "Vergeben" && canAssignOrder(order)
+      ? `<button class="btn btn-outline" onclick="completeOrder('${order.id}')">Als abgeschlossen markieren</button>`
+      : "";
+
+  const ownerBadge = own ? `<span class="badge owner-badge">Mein Auftrag</span>` : "";
+
+  return `
+  <div class="order">
+    <div class="row">
+      <div>
+        <div style="font-size:18px;font-weight:700">${escapeText(order.title)}</div>
+        <div class="muted" style="margin-top:4px">${escapeText(order.description)}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${ownerBadge}
+        <span class="badge ${statusClass(order.status)}">${escapeText(order.status)}</span>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div>📍 ${escapeText(order.city)}</div>
+      <div>💶 ${Number(order.price).toLocaleString("de-DE")} €</div>
+      <div>📦 ${escapeText(order.volume)}</div>
+      <div>📅 ${escapeText(order.date)}</div>
+    </div>
+
+    <div class="info-box">
+      <div>Annonciert von: <strong>${escapeText(order.announcer)}</strong></div>
+      <div>Vergebener Partner: <strong>${order.assignedPartner ? escapeText(order.assignedPartner) : "Noch nicht vergeben"}</strong></div>
+    </div>
+
+    ${interestedPartnersHtml(order)}
+
+    <div class="actions">
+      ${interestButton}
+      <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
+      ${completeButton}
+    </div>
+
+    <div class="chat-box" id="chat-${order.id}">
+      <div style="font-weight:700;margin-bottom:8px">Nachrichten</div>
+      <div class="chat-list" id="messages-${order.id}"></div>
+
+      <div class="chat-input-row">
+        ${ownerRecipientSelect}
+        <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
+        <button class="btn btn-primary" onclick="handleSend('${order.id}')">Senden</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function applicationCard(order){
+  const isAssignedToMe = normalizeName(order.assignedPartner) === normalizeName(getChatName());
+  return `
+    <div class="application-box">
+      <div class="row">
+        <div>
+          <strong>${escapeText(order.title)}</strong><br>
+          <span class="muted tiny">${escapeText(order.city)} · Auftraggeber: ${escapeText(order.announcer)}</span>
+        </div>
+        <span class="badge ${statusClass(order.status)}">${escapeText(order.status)}</span>
+      </div>
+      <div style="margin-top:10px">
+        ${isAssignedToMe ? `<span class="badge" style="background:#dcfce7;color:#166534">An dich vergeben</span>` : `<span class="muted">Dein Interesse wurde an den Auftraggeber übermittelt.</span>`}
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
+      </div>
+      <div class="chat-box" id="chat-${order.id}">
+        <div style="font-weight:700;margin-bottom:8px">Nachrichten</div>
+        <div class="chat-list" id="messages-${order.id}"></div>
+        <div class="chat-input-row">
+          <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
+          <button class="btn btn-primary" onclick="handleSend('${order.id}')">Senden</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderOrders(){
+  const filtered = getFilteredOrders();
+  const ordersList = document.getElementById("ordersList");
+  const dashboardOrders = document.getElementById("dashboardOrders");
+  const myOrdersList = document.getElementById("myOrdersList");
+  const dashboardMyOrders = document.getElementById("dashboardMyOrders");
+  const applicationsList = document.getElementById("applicationsList");
+
+  if(ordersList){
+    ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="empty-state">Keine Aufträge gefunden.</div>`;
+  }
+
+  if(dashboardOrders){
+    dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="empty-state">Keine Aufträge gefunden.</div>`;
+  }
+
+  const own = myOrders();
+  if(myOrdersList){
+    myOrdersList.innerHTML = own.map(orderCard).join("") || `<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>`;
+  }
+
+  if(dashboardMyOrders){
+    dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || `<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>`;
+  }
+
+  const apps = myApplications();
+  if(applicationsList){
+    applicationsList.innerHTML = apps.map(applicationCard).join("") || `<div class="empty-state">Du hast noch keine Interessenbekundungen abgegeben.</div>`;
+  }
+}
+
+function renderCityFilter(){
+  const sel = document.getElementById("cityFilter");
+  if(!sel) return;
+
+  const current = sel.value || "all";
+  const cities = [...new Set(state.orders.map(o=>o.city).filter(Boolean))];
+
+  sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${escapeText(c)}">${escapeText(c)}</option>`).join("");
+
+  if([...sel.options].some(o=>o.value === current)){
+    sel.value = current;
+  }
+}
+
+function activityBadge(type){
+  return `<span class="badge" style="background:#e3f2ff;color:#1f78c8">${escapeText(type)}</span>`;
+}
+
+function renderDashboardActivities(){
+  const wrap = document.getElementById("dashboardActivities");
+  if(!wrap) return;
+
+  const ownInterestedOrders = myOrders().filter(o => (o.interestedPartners || []).length > 0 && !["Vergeben","Abgeschlossen"].includes(o.status));
+
+  const notificationHtml = ownInterestedOrders.length ? `
+    <div class="timeline-item" style="background:#fff7ed;border-color:#fed7aa">
+      <div class="row">
+        <strong>Neue Interessenten</strong>
+        <span class="badge interest-badge">${ownInterestedOrders.reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0)}</span>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        Für deine Aufträge gibt es Interessenten. Öffne „Meine Aufträge“, um sie zu sehen und direkt anzuschreiben.
+      </div>
+      <button class="btn btn-outline" style="margin-top:10px" onclick="showPage('myOrders')">Meine Aufträge öffnen</button>
+    </div>
+  ` : "";
+
+  const activityHtml = state.activities.slice(0,5).map(a => `
+    <div class="timeline-item">
+      <div class="row">
+        <strong>${escapeText(a.user)}</strong>
+        <span class="muted tiny">${escapeText(a.date)} · ${escapeText(a.time)}</span>
+      </div>
+      <div style="margin-top:8px">${activityBadge(a.type)}</div>
+      <div class="muted" style="margin-top:10px">${escapeText(a.details)}</div>
+    </div>
+  `).join("");
+
+  wrap.innerHTML = notificationHtml + activityHtml;
+}
+
+function renderCalendar(){
+  const wrap = document.getElementById("calendarWrap");
+  if(!wrap) return;
+
+  const grouped = {};
+  state.activities.forEach(a => {
+    if(!grouped[a.date]) grouped[a.date] = [];
+    grouped[a.date].push(a);
+  });
+
+  wrap.innerHTML = Object.keys(grouped).sort().reverse().map(date => `
+    <div class="card" style="margin-bottom:18px">
+      <h2 style="margin-top:0">${escapeText(date)}</h2>
+      ${grouped[date].map(a => `
+        <div class="timeline-item">
+          <div class="row"><strong>${escapeText(a.time)}</strong>${activityBadge(a.type)}</div>
+          <div style="margin-top:10px"><strong>${escapeText(a.user)}</strong></div>
+          <div class="muted" style="margin-top:4px">${escapeText(a.details)}</div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
+
+async function sendChatMessage(orderId, sender, recipient, text){
+  const { error } = await client.from("messages").insert([{
+    sender,
+    recipient,
+    body: text,
+    orderRef: String(orderId)
+  }]);
+
+  if(error){
+    console.error("Fehler beim Senden:", error);
+    alert("Nachricht konnte nicht gespeichert werden.");
+    return false;
+  }
+
+  return true;
+}
+
+async function loadMessages(orderId){
+  const name = getChatName();
+
+  let query = client
+    .from("messages")
+    .select("*")
+    .eq("orderRef", String(orderId))
+    .order("created_at", { ascending:true });
+
+  if(!isAdmin() && name){
+    query = query.or(`sender.eq.${name},recipient.eq.${name},recipient.eq.Auftraggeber`);
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    console.error("Fehler beim Laden:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+async function renderOrderMessages(orderId){
+  const container = document.getElementById(`messages-${orderId}`);
+  if(!container) return;
+
+  const messages = await loadMessages(orderId);
+  const myName = getChatName();
+
+  if(!messages.length){
+    container.innerHTML = `<div class="muted">Keine Nachrichten</div>`;
+    return;
+  }
+
+  container.innerHTML = messages.map(m => {
+    const isMe = m.sender === myName;
+    return `
+      <div style="display:flex;justify-content:${isMe ? "flex-end" : "flex-start"};margin-bottom:8px">
+        <div style="
+          max-width:75%;
+          padding:10px 12px;
+          border-radius:14px;
+          background:${isMe ? "#3ba4ff" : "#e5e7eb"};
+          color:${isMe ? "white" : "black"};
+        ">
+          <div style="font-size:12px;opacity:.75">${escapeText(m.sender)}</div>
+          <div>${escapeText(m.body)}</div>
+          <div style="font-size:10px;opacity:.65;margin-top:4px;text-align:right">
+            ${m.created_at ? new Date(m.created_at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) : ""}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function messageInterestedPartner(orderId, partnerName){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  replyTargets[orderId] = partnerName;
+
+  const chat = document.getElementById("chat-" + orderId);
+  if(chat && chat.style.display !== "block"){
+    openMessages(orderId);
+  } else {
+    renderOrderMessages(orderId);
+  }
+
+  setTimeout(() => {
+    const select = document.getElementById("recipient-" + orderId);
+    const input = document.getElementById("msgInput-" + orderId);
+
+    if(select){
+      select.value = partnerName;
+    }
+
+    if(input){
+      input.placeholder = "Nachricht an " + partnerName + " schreiben...";
+      input.focus();
+    }
+  }, 100);
+}
+
+function openMessages(orderId){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const chat = document.getElementById("chat-" + orderId);
+  if(!chat) return;
+
+  if(chat.style.display === "block"){
+    chat.style.display = "none";
+    return;
+  }
+
+  chat.style.display = "block";
+  renderOrderMessages(orderId);
+
+  if(!refreshTimers[orderId]){
+    refreshTimers[orderId] = setInterval(() => {
+      const openChat = document.getElementById("chat-" + orderId);
+      if(openChat && openChat.style.display === "block"){
+        renderOrderMessages(orderId);
+      }
+    }, 3000);
+  }
+}
+
+async function handleSend(orderId){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const input = document.getElementById("msgInput-" + orderId);
+  const text = input.value.trim();
+  if(!text) return alert("Bitte Nachricht eingeben.");
+
+  const name = getChatName();
+  const order = state.orders.find(o=>String(o.id)===String(orderId));
+
+  let sender = name;
+  let recipient = order ? order.announcer : "Auftraggeber";
+
+  // Wenn der Auftraggeber schreibt, geht die Nachricht gezielt an den gewählten Interessenten.
+  if(order && isOwnOrder(order)){
+    const select = document.getElementById("recipient-" + orderId);
+    recipient = (select && select.value) || replyTargets[orderId] || "";
+
+    if(!recipient){
+      return alert("Bitte zuerst einen Interessenten als Empfänger auswählen.");
+    }
+  }
+
+  const success = await sendChatMessage(orderId, sender, recipient, text);
+
+  if(success){
+    input.value = "";
+    await renderOrderMessages(orderId);
+  }
+}
+
+async function expressInterest(orderId){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const order = state.orders.find(o=>String(o.id)===String(orderId));
+  if(!order) return;
+
+  const partnerName = getChatName();
+
+  if(isOwnOrder(order)){
+    return alert("Du kannst kein Interesse an deinem eigenen Auftrag bekunden.");
+  }
+
+  if((order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(partnerName))){
+    return alert("Du hast bereits Interesse bekundet.");
+  }
+
+  order.interestedPartners = [...(order.interestedPartners || []), partnerName];
+
+  if(order.status === "Offen"){
+    order.status = "In Verhandlung";
+  }
+
+  const { error } = await client
+    .from("orders")
+    .update({
+      interestedPartners: order.interestedPartners,
+      status: order.status
+    })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Fehler beim Interesse:", error);
+    return alert("Interesse konnte nicht gespeichert werden.");
+  }
+
+  addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`);
+  await loadFromSupabase();
+  alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
+}
+
+async function assignOrder(orderId, partnerName){
+  const order = state.orders.find(o=>String(o.id)===String(orderId));
+  if(!order) return;
+
+  if(!canAssignOrder(order)){
+    return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag vergeben.");
+  }
+
+  const { error } = await client
+    .from("orders")
+    .update({
+      assignedPartner: partnerName,
+      status: "Vergeben"
+    })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Fehler bei Vergabe:", error);
+    return alert("Auftrag konnte nicht vergeben werden.");
+  }
+
+  addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`);
+  await loadFromSupabase();
+  alert("Auftrag wurde vergeben.");
+}
+
+async function completeOrder(orderId){
+  const order = state.orders.find(o=>String(o.id)===String(orderId));
+  if(!order) return;
+
+  if(!canAssignOrder(order)){
+    return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag abschließen.");
+  }
+
+  const { error } = await client
+    .from("orders")
+    .update({ status: "Abgeschlossen" })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Fehler beim Abschließen:", error);
+    return alert("Auftrag konnte nicht abgeschlossen werden.");
+  }
+
+  addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`);
+  await loadFromSupabase();
+  alert("Auftrag wurde als abgeschlossen markiert.");
+}
+
+async function createOrder(){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const title = document.getElementById("newTitle").value.trim();
+  const city = document.getElementById("newCity").value.trim();
+  const price = document.getElementById("newPrice").value.trim();
+  const volume = document.getElementById("newVolume").value.trim();
+  const date = document.getElementById("newDate").value;
+  const description = document.getElementById("newDescription").value.trim() || "Neuer annoncierter Auftrag.";
+  const announcer = document.getElementById("newAnnouncer").value.trim() || getChatName();
+
+  if(!title || !city || !price || !volume || !date){
+    return alert("Bitte alle Pflichtfelder ausfüllen.");
+  }
+
+  const { error } = await client.from("orders").insert([{
+    title,
+    city,
+    price:Number(String(price).replace(",", ".")),
+    volume,
+    date,
+    announcer,
+    status:"Offen",
+    description,
+    interestedPartners:[],
+    assignedPartner:""
+  }]);
+
+  if(error){
+    console.error("Fehler beim Speichern:", error);
+    return alert("Fehler beim Speichern.");
+  }
+
+  addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
+
+  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = "";
+  });
+
+  const announcerEl = document.getElementById("newAnnouncer");
+  if(announcerEl) announcerEl.value = getChatName();
+
+  alert("Auftrag erstellt.");
+  await loadFromSupabase();
+  showPage("orders");
+}
+
+async function registerPartner(){
+  const name = document.getElementById("regName").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value.trim();
+  const role = document.getElementById("regRole").value || "Partner";
+
+  if(!name || !email || !password){
+    return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
+  }
+
+  const { error } = await client
+    .from("partners")
+    .insert([{ name, email, password, role }]);
+
+  if(error){
+    console.error("Fehler:", error);
+    return alert("Registrierung fehlgeschlagen.");
+  }
+
+  localStorage.setItem("chatName", name);
+  localStorage.setItem("role", role);
+
+  updateNameDisplay();
+  addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
+
+  ["regName","regEmail","regPassword"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = "";
+  });
+
+  alert("Registrierung erfolgreich.");
+  showPage("dashboard");
+}
+
+async function login(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  if(!email || !password){
+    return alert("Bitte E-Mail und Passwort eingeben.");
+  }
+
+  const { data, error } = await client
+    .from("partners")
+    .select("*")
+    .eq("email", email)
+    .eq("password", password)
+    .single();
+
+  if(error || !data){
+    console.error("Login Fehler:", error);
+    return alert("Login fehlgeschlagen.");
+  }
+
+  localStorage.setItem("chatName", data.name);
+  localStorage.setItem("role", data.role || "Partner");
+
+  updateNameDisplay();
+
+  alert("Login erfolgreich.");
+  showPage("dashboard");
+}
+
+function render(){
+  updateNameDisplay();
+  updateNavBadges();
+  renderStats();
+  renderCityFilter();
+  renderOrders();
+  renderDashboardActivities();
+  renderCalendar();
+}
+
+document.getElementById("globalSearch").addEventListener("input", render);
+document.getElementById("orderSearch").addEventListener("input", render);
+document.getElementById("cityFilter").addEventListener("change", render);
+
+updateNameDisplay();
+loadFromSupabase();
+</script>
 </body>
 </html>
