@@ -55,6 +55,7 @@
       position:sticky;
       top:20px;
       height:calc(100vh - 40px);
+      overflow-y:auto;
     }
 
     .brand{
@@ -158,6 +159,7 @@
       font-size:14px;
     }
 
+    .btn:disabled{opacity:.55;cursor:not-allowed}
     .btn-primary{background:var(--primary);color:white}
     .btn-success{background:var(--accent);color:white}
     .btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
@@ -209,6 +211,8 @@
     .status-InVerhandlung{background:#fff3d6;color:#9a6700}
     .status-Vergeben{background:#dbf7ec;color:#06754f}
     .status-Abgeschlossen{background:#eceff3;color:#506072}
+    .owner-badge{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .interest-badge{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
 
     .meta{
       display:grid;
@@ -226,6 +230,26 @@
       font-size:14px;
       line-height:1.5;
     }
+
+    .interest-box{
+      margin-top:12px;
+      padding:14px;
+      border-radius:18px;
+      background:#fffdf6;
+      border:1px solid #fde68a;
+    }
+
+    .interest-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 0;
+      border-top:1px solid #fde68a;
+    }
+
+    .interest-row:first-of-type{border-top:none}
 
     .actions{
       display:flex;
@@ -272,25 +296,11 @@
       align-items:center;
     }
 
-    .chat-input-row input{
-      border-radius:999px;
-    }
+    .chat-input-row input{border-radius:999px}
 
-    @media(max-width:1200px){
-      .stats{grid-template-columns:repeat(3,1fr)}
-      .grid-2{grid-template-columns:1fr}
-    }
-
-    @media(max-width:900px){
-      .app{grid-template-columns:1fr}
-      .sidebar{position:static;height:auto}
-      .meta,.two-col,.stats{grid-template-columns:1fr 1fr}
-    }
-
-    @media(max-width:640px){
-      .meta,.two-col,.stats{grid-template-columns:1fr}
-      .search{min-width:100%}
-    }
+    @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
+    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.meta,.two-col,.stats{grid-template-columns:1fr}.search{min-width:100%}}
   </style>
 </head>
 
@@ -307,6 +317,7 @@
 
     <button class="nav-btn active" data-page="dashboard">Dashboard</button>
     <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
+    <button class="nav-btn" data-page="myOrders">Meine Aufträge</button>
     <button class="nav-btn" data-page="createOrder">Auftrag vergeben</button>
     <button class="nav-btn" data-page="admin">Admin-Kalender</button>
     <button class="nav-btn" data-page="register">Registrierung / Login</button>
@@ -352,10 +363,10 @@
         </div>
 
         <div class="card">
-          <h2 style="margin-top:0">Admin-Verlauf im Kalenderstil</h2>
-          <div class="muted" style="margin-bottom:14px">Alle Aktivitäten werden chronologisch angezeigt.</div>
-          <div id="dashboardActivities"></div>
-          <button class="btn btn-outline" onclick="showPage('admin')">Zur Kalenderansicht</button>
+          <h2 style="margin-top:0">Meine Aufträge mit Interessenten</h2>
+          <div class="muted" style="margin-bottom:14px">Hier sieht der Auftragsersteller sofort, wer Interesse bekundet hat.</div>
+          <div id="dashboardMyOrders"></div>
+          <button class="btn btn-outline" onclick="showPage('myOrders')">Meine Aufträge öffnen</button>
         </div>
       </div>
     </section>
@@ -375,6 +386,14 @@
         </div>
 
         <div id="ordersList" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <section id="page-myOrders" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Meine Aufträge</h2>
+        <div class="muted" style="margin-bottom:14px">Alle von dir annoncierten Aufträge inklusive Interessentenliste und Vergabe-Buttons.</div>
+        <div id="myOrdersList"></div>
       </div>
     </section>
 
@@ -459,6 +478,10 @@ function getChatName(){
   return localStorage.getItem("chatName") || "";
 }
 
+function normalizeName(name){
+  return String(name || "").trim().toLowerCase();
+}
+
 function isLoggedIn(){
   return !!localStorage.getItem("chatName");
 }
@@ -471,17 +494,21 @@ function canCreateOrder(){
   return isLoggedIn();
 }
 
+function isOwnOrder(order){
+  if(!order) return false;
+  return normalizeName(order.announcer) === normalizeName(getChatName());
+}
+
 function canExpressInterest(order){
   if(!isLoggedIn()) return false;
   if(!order) return false;
-  return String(order.announcer).trim() !== String(getChatName()).trim();
+  return !isOwnOrder(order);
 }
 
 function canAssignOrder(order){
   if(!isLoggedIn()) return false;
   if(isAdmin()) return true;
-  if(!order) return false;
-  return String(order.announcer).trim() === String(getChatName()).trim();
+  return isOwnOrder(order);
 }
 
 function updateNameDisplay(){
@@ -494,6 +521,11 @@ function updateNameDisplay(){
 
   if(roleEl){
     roleEl.innerText = localStorage.getItem("role") || "";
+  }
+
+  const announcerInput = document.getElementById("newAnnouncer");
+  if(announcerInput && isLoggedIn() && !announcerInput.value){
+    announcerInput.value = getChatName();
   }
 }
 
@@ -561,6 +593,10 @@ function showPage(page){
     return alert("Bitte zuerst registrieren oder einloggen.");
   }
 
+  if(page === "myOrders" && !isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
   document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
 
   const target = document.getElementById("page-"+page);
@@ -581,13 +617,22 @@ function statusClass(status){
   return "status-" + String(status).replaceAll(" ","");
 }
 
+function myOrders(){
+  const name = getChatName();
+  if(!name) return [];
+  return state.orders.filter(order => isOwnOrder(order));
+}
+
 function statsData(){
+  const own = myOrders();
+  const ownOpenInterests = own.reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0);
+
   return [
     ["Offene Aufträge", state.orders.filter(o=>o.status==="Offen").length, "Aktuell annoncierte Aufträge"],
     ["In Verhandlung", state.orders.filter(o=>o.status==="In Verhandlung").length, "Mit Interessenten"],
     ["Vergeben", state.orders.filter(o=>o.status==="Vergeben").length, "An Partner zugeteilt"],
-    ["Abgeschlossen", state.orders.filter(o=>o.status==="Abgeschlossen").length, "Erledigte Aufträge"],
-    ["Nachrichten", "Live", "Supabase Chat"],
+    ["Meine Aufträge", own.length, "Von dir annonciert"],
+    ["Interessenten", ownOpenInterests, "Für deine Aufträge"],
     ["Aktivitäten", state.activities.length, "Für Admin protokolliert"]
   ];
 }
@@ -626,52 +671,99 @@ function getFilteredOrders(){
   });
 }
 
+function escapeText(value){
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function jsArg(value){
+  return String(value || "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+}
+
+function interestedPartnersHtml(order){
+  const partners = order.interestedPartners || [];
+  const ownerCanAssign = canAssignOrder(order) && !["Vergeben","Abgeschlossen"].includes(order.status);
+
+  if(!partners.length){
+    return `
+      <div class="interest-box">
+        <strong>Interessenten</strong><br>
+        <span class="muted">Noch keine Interessenten.</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="interest-box">
+      <div class="row" style="margin-bottom:8px">
+        <strong>Interessenten (${partners.length})</strong>
+        ${isOwnOrder(order) ? `<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>` : ""}
+      </div>
+      ${partners.map(partner => `
+        <div class="interest-row">
+          <div>
+            <strong>${escapeText(partner)}</strong><br>
+            <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
+          </div>
+          ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 function orderCard(order){
-  const isOwnOrder = String(order.announcer).trim() === String(getChatName()).trim();
+  const own = isOwnOrder(order);
+  const hasMyInterest = (order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(getChatName()));
 
   const interestButton = canExpressInterest(order)
-    ? `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`
-    : isOwnOrder
+    ? hasMyInterest
+      ? `<button class="btn btn-outline" disabled>Interesse bereits bekundet</button>`
+      : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`
+    : own
       ? `<button class="btn btn-outline" disabled>Eigener Auftrag</button>`
       : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`;
-
-  const assignButton = order.interestedPartners.length > 0 &&
-    !["Vergeben","Abgeschlossen"].includes(order.status) &&
-    canAssignOrder(order)
-      ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${String(order.interestedPartners[0]).replaceAll("'","\\'")}')">Auftrag vergeben</button>`
-      : "";
 
   const completeButton = order.status === "Vergeben" && canAssignOrder(order)
       ? `<button class="btn btn-outline" onclick="completeOrder('${order.id}')">Als abgeschlossen markieren</button>`
       : "";
 
+  const ownerBadge = own ? `<span class="badge owner-badge">Mein Auftrag</span>` : "";
+
   return `
   <div class="order">
     <div class="row">
       <div>
-        <div style="font-size:18px;font-weight:700">${order.title}</div>
-        <div class="muted" style="margin-top:4px">${order.description}</div>
+        <div style="font-size:18px;font-weight:700">${escapeText(order.title)}</div>
+        <div class="muted" style="margin-top:4px">${escapeText(order.description)}</div>
       </div>
-      <span class="badge ${statusClass(order.status)}">${order.status}</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${ownerBadge}
+        <span class="badge ${statusClass(order.status)}">${escapeText(order.status)}</span>
+      </div>
     </div>
 
     <div class="meta">
-      <div>📍 ${order.city}</div>
+      <div>📍 ${escapeText(order.city)}</div>
       <div>💶 ${Number(order.price).toLocaleString("de-DE")} €</div>
-      <div>📦 ${order.volume}</div>
-      <div>📅 ${order.date}</div>
+      <div>📦 ${escapeText(order.volume)}</div>
+      <div>📅 ${escapeText(order.date)}</div>
     </div>
 
     <div class="info-box">
-      <div>Annonciert von: <strong>${order.announcer}</strong></div>
-      <div>Interessenten: <strong>${order.interestedPartners.length ? order.interestedPartners.join(", ") : "Noch keine"}</strong></div>
-      <div>Vergebener Partner: <strong>${order.assignedPartner || "Noch nicht vergeben"}</strong></div>
+      <div>Annonciert von: <strong>${escapeText(order.announcer)}</strong></div>
+      <div>Vergebener Partner: <strong>${order.assignedPartner ? escapeText(order.assignedPartner) : "Noch nicht vergeben"}</strong></div>
     </div>
+
+    ${interestedPartnersHtml(order)}
 
     <div class="actions">
       ${interestButton}
       <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
-      ${assignButton}
       ${completeButton}
     </div>
 
@@ -691,6 +783,8 @@ function renderOrders(){
   const filtered = getFilteredOrders();
   const ordersList = document.getElementById("ordersList");
   const dashboardOrders = document.getElementById("dashboardOrders");
+  const myOrdersList = document.getElementById("myOrdersList");
+  const dashboardMyOrders = document.getElementById("dashboardMyOrders");
 
   if(ordersList){
     ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
@@ -698,6 +792,15 @@ function renderOrders(){
 
   if(dashboardOrders){
     dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+  }
+
+  const own = myOrders();
+  if(myOrdersList){
+    myOrdersList.innerHTML = own.map(orderCard).join("") || `<div class="muted">Du hast noch keine eigenen Aufträge annonciert.</div>`;
+  }
+
+  if(dashboardMyOrders){
+    dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || `<div class="muted">Du hast noch keine eigenen Aufträge annonciert.</div>`;
   }
 }
 
@@ -708,7 +811,7 @@ function renderCityFilter(){
   const current = sel.value || "all";
   const cities = [...new Set(state.orders.map(o=>o.city).filter(Boolean))];
 
-  sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${c}">${c}</option>`).join("");
+  sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${escapeText(c)}">${escapeText(c)}</option>`).join("");
 
   if([...sel.options].some(o=>o.value === current)){
     sel.value = current;
@@ -716,7 +819,7 @@ function renderCityFilter(){
 }
 
 function activityBadge(type){
-  return `<span class="badge" style="background:#e3f2ff;color:#1f78c8">${type}</span>`;
+  return `<span class="badge" style="background:#e3f2ff;color:#1f78c8">${escapeText(type)}</span>`;
 }
 
 function renderDashboardActivities(){
@@ -726,11 +829,11 @@ function renderDashboardActivities(){
   wrap.innerHTML = state.activities.slice(0,5).map(a => `
     <div class="timeline-item">
       <div class="row">
-        <strong>${a.user}</strong>
-        <span class="muted tiny">${a.date} · ${a.time}</span>
+        <strong>${escapeText(a.user)}</strong>
+        <span class="muted tiny">${escapeText(a.date)} · ${escapeText(a.time)}</span>
       </div>
       <div style="margin-top:8px">${activityBadge(a.type)}</div>
-      <div class="muted" style="margin-top:10px">${a.details}</div>
+      <div class="muted" style="margin-top:10px">${escapeText(a.details)}</div>
     </div>
   `).join("");
 }
@@ -747,12 +850,12 @@ function renderCalendar(){
 
   wrap.innerHTML = Object.keys(grouped).sort().reverse().map(date => `
     <div class="card" style="margin-bottom:18px">
-      <h2 style="margin-top:0">${date}</h2>
+      <h2 style="margin-top:0">${escapeText(date)}</h2>
       ${grouped[date].map(a => `
         <div class="timeline-item">
-          <div class="row"><strong>${a.time}</strong>${activityBadge(a.type)}</div>
-          <div style="margin-top:10px"><strong>${a.user}</strong></div>
-          <div class="muted" style="margin-top:4px">${a.details}</div>
+          <div class="row"><strong>${escapeText(a.time)}</strong>${activityBadge(a.type)}</div>
+          <div style="margin-top:10px"><strong>${escapeText(a.user)}</strong></div>
+          <div class="muted" style="margin-top:4px">${escapeText(a.details)}</div>
         </div>
       `).join("")}
     </div>
@@ -822,8 +925,8 @@ async function renderOrderMessages(orderId){
           background:${isMe ? "#3ba4ff" : "#e5e7eb"};
           color:${isMe ? "white" : "black"};
         ">
-          <div style="font-size:12px;opacity:.75">${m.sender}</div>
-          <div>${m.body}</div>
+          <div style="font-size:12px;opacity:.75">${escapeText(m.sender)}</div>
+          <div>${escapeText(m.body)}</div>
           <div style="font-size:10px;opacity:.65;margin-top:4px;text-align:right">
             ${m.created_at ? new Date(m.created_at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) : ""}
           </div>
@@ -876,7 +979,7 @@ async function handleSend(orderId){
   let sender = name;
   let recipient = order ? order.announcer : "Auftraggeber";
 
-  if(order && order.announcer === name){
+  if(order && isOwnOrder(order)){
     recipient = prompt("Antwort an welchen Interessenten?") || "Partner";
   }
 
@@ -898,15 +1001,15 @@ async function expressInterest(orderId){
 
   const partnerName = getChatName();
 
-  if(String(order.announcer).trim() === String(partnerName).trim()){
+  if(isOwnOrder(order)){
     return alert("Du kannst kein Interesse an deinem eigenen Auftrag bekunden.");
   }
 
-  if(order.interestedPartners.includes(partnerName)){
+  if((order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(partnerName))){
     return alert("Du hast bereits Interesse bekundet.");
   }
 
-  order.interestedPartners.push(partnerName);
+  order.interestedPartners = [...(order.interestedPartners || []), partnerName];
 
   if(order.status === "Offen"){
     order.status = "In Verhandlung";
@@ -927,7 +1030,7 @@ async function expressInterest(orderId){
 
   addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`);
   await loadFromSupabase();
-  alert("Interesse wurde eingetragen.");
+  alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
 }
 
 async function assignOrder(orderId, partnerName){
@@ -999,7 +1102,7 @@ async function createOrder(){
   const { error } = await client.from("orders").insert([{
     title,
     city,
-    price:Number(price),
+    price:Number(String(price).replace(",", ".")),
     volume,
     date,
     announcer,
@@ -1016,10 +1119,13 @@ async function createOrder(){
 
   addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
 
-  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription","newAnnouncer"].forEach(id => {
+  ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
   });
+
+  const announcerEl = document.getElementById("newAnnouncer");
+  if(announcerEl) announcerEl.value = getChatName();
 
   alert("Auftrag erstellt.");
   await loadFromSupabase();
