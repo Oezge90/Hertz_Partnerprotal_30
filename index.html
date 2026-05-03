@@ -18,21 +18,26 @@
     :root{
       --bg:#f3f9ff;
       --card:#fff;
-      --primary:#3ba4ff;
+      --primary:#2563eb;
+      --primary-light:#3ba4ff;
       --accent:#20b486;
       --text:#1f2d3d;
       --muted:#6b7a90;
       --border:#d9ebfb;
-      --shadow:0 10px 30px rgba(29,93,155,.08);
+      --warning:#f97316;
+      --danger:#ef4444;
+      --shadow:0 14px 40px rgba(29,93,155,.10);
     }
 
     *{box-sizing:border-box}
 
     body{
       margin:0;
-      font-family:Arial,Helvetica,sans-serif;
+      font-family:Inter,Arial,Helvetica,sans-serif;
       color:var(--text);
-      background:linear-gradient(135deg,#eef7ff,#f9fcff,#edf8ff);
+      background:
+        radial-gradient(circle at top left, rgba(59,164,255,.20), transparent 30%),
+        linear-gradient(135deg,#eef7ff,#f9fcff,#edf8ff);
     }
 
     .app{
@@ -94,10 +99,13 @@
     }
 
     .nav-btn.active{
-      background:var(--primary);
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
       color:white;
       font-weight:700;
+      box-shadow:0 10px 22px rgba(37,99,235,.18);
     }
+
+    .nav-btn:hover:not(.active){background:#eef7ff}
 
     .nav-badge{
       float:right;
@@ -173,15 +181,62 @@
     }
 
     .btn:disabled{opacity:.55;cursor:not-allowed}
-    .btn-primary{background:var(--primary);color:white}
-    .btn-success{background:var(--accent);color:white}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;box-shadow:0 10px 20px rgba(37,99,235,.16)}
+    .btn-success{background:var(--accent);color:white;box-shadow:0 10px 20px rgba(32,180,134,.14)}
     .btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
     .btn-danger{background:#fee2e2;color:#991b1b}
+    .btn:hover{transform:translateY(-1px)}
 
     .stats{
       display:grid;
       grid-template-columns:repeat(6,1fr);
       gap:14px;
+    }
+
+    .hero{
+      padding:28px;
+      border-radius:30px;
+      background:linear-gradient(135deg,#ffffff 0%,#eef7ff 100%);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      margin-bottom:20px;
+    }
+
+    .hero-title{
+      font-size:34px;
+      line-height:1.1;
+      margin:0 0 10px;
+      letter-spacing:-.02em;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.3fr .7fr;
+      gap:18px;
+      align-items:center;
+    }
+
+    .hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:white;
+      border:1px solid var(--border);
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .empty-state{
+      padding:22px;
+      border:1px dashed var(--border);
+      border-radius:22px;
+      background:#f8fcff;
+      color:var(--muted);
+      text-align:center;
     }
 
     .stat-value{
@@ -385,6 +440,27 @@
     </section>
 
     <section id="page-dashboard" class="page">
+      <div class="hero">
+        <div class="hero-grid">
+          <div>
+            <h2 class="hero-title">Aufträge finden, Partner verbinden, Vergaben sauber steuern.</h2>
+            <div class="muted">Das Hertz-Partnerportal bündelt Auftragsvergabe, Interessentenmanagement und direkte Kommunikation in einer Oberfläche.</div>
+            <div class="hero-pills">
+              <span class="pill">✅ Partnernetzwerk</span>
+              <span class="pill">💬 Direktchat</span>
+              <span class="pill">📌 Interessentenlisten</span>
+              <span class="pill">🔒 Rollenlogik</span>
+            </div>
+          </div>
+          <div class="info-box">
+            <strong>Schnellstart</strong><br>
+            1. Einloggen<br>
+            2. Auftrag annoncieren oder Interesse bekunden<br>
+            3. Über „Meine Aufträge“ Interessenten verwalten
+          </div>
+        </div>
+      </div>
+
       <div class="stats" id="stats"></div>
 
       <div class="grid-2" style="margin-top:20px">
@@ -916,25 +992,25 @@ function renderOrders(){
   const applicationsList = document.getElementById("applicationsList");
 
   if(ordersList){
-    ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+    ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="empty-state">Keine Aufträge gefunden.</div>`;
   }
 
   if(dashboardOrders){
-    dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="muted">Keine Aufträge gefunden.</div>`;
+    dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="empty-state">Keine Aufträge gefunden.</div>`;
   }
 
   const own = myOrders();
   if(myOrdersList){
-    myOrdersList.innerHTML = own.map(orderCard).join("") || `<div class="muted">Du hast noch keine eigenen Aufträge annonciert.</div>`;
+    myOrdersList.innerHTML = own.map(orderCard).join("") || `<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>`;
   }
 
   if(dashboardMyOrders){
-    dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || `<div class="muted">Du hast noch keine eigenen Aufträge annonciert.</div>`;
+    dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || `<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>`;
   }
 
   const apps = myApplications();
   if(applicationsList){
-    applicationsList.innerHTML = apps.map(applicationCard).join("") || `<div class="muted">Du hast noch keine Interessenbekundungen abgegeben.</div>`;
+    applicationsList.innerHTML = apps.map(applicationCard).join("") || `<div class="empty-state">Du hast noch keine Interessenbekundungen abgegeben.</div>`;
   }
 }
 
