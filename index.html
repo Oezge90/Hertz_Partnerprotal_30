@@ -607,7 +607,11 @@ function escapeText(value){
 }
 
 function jsArg(value){
-  return String(value || "").replaceAll("\", "\\").replaceAll("'", "\'");
+  return encodeURIComponent(String(value || ""));
+}
+
+function fromArg(value){
+  return decodeURIComponent(String(value || ""));
 }
 
 function updateNameDisplay(){
@@ -778,6 +782,7 @@ function renderProfilePreview(){
 }
 
 function viewCompanyProfile(name){
+  name = fromArg(name);
   const profile = getProfileByName(name);
   if(!profile) return alert("Für " + name + " wurde noch kein Firmenprofil angelegt.");
 
@@ -1123,6 +1128,7 @@ async function renderOrderMessages(orderId){
 }
 
 function messageInterestedPartner(orderId, partnerName){
+  partnerName = fromArg(partnerName);
   if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
   replyTargets[orderId] = partnerName;
   const chat = document.getElementById("chat-" + orderId);
@@ -1211,6 +1217,7 @@ async function expressInterest(orderId){
 }
 
 async function assignOrder(orderId, partnerName){
+  partnerName = fromArg(partnerName);
   const order = state.orders.find(o => String(o.id) === String(orderId));
   if(!order) return;
   if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag vergeben.");
