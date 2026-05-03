@@ -74,12 +74,23 @@
       width:46px;
       height:46px;
       border-radius:16px;
-      background:var(--primary);
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
       color:white;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-weight:700;
+      font-weight:800;
+      box-shadow:0 12px 28px rgba(37,99,235,.25);
+    }
+
+    .brand-logo{
+      width:60px;
+      height:60px;
+      object-fit:contain;
+      border-radius:18px;
+      background:white;
+      padding:6px;
+      box-shadow:0 10px 25px rgba(0,0,0,.08),0 0 20px rgba(37,99,235,.15);
     }
 
     .muted{color:var(--muted)}
@@ -397,7 +408,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-badge">H</div>
+      <img src="logo.png" class="brand-logo" alt="Heinrich Hertz Elektrotechnik GmbH Logo">
       <div>
         <div style="font-weight:700">Hertz-Partnerportal</div>
         <div class="muted tiny">Partnernetzwerk & Auftragsvergabe</div>
@@ -408,6 +419,7 @@
     <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
     <button class="nav-btn" data-page="myOrders">Meine Aufträge <span id="myOrdersNavBadge" class="nav-badge"></span></button>
     <button class="nav-btn" data-page="applications">Meine Bewerbungen <span id="applicationsNavBadge" class="nav-badge"></span></button>
+    <button class="nav-btn" data-page="profile">Firmenprofil</button>
     <button class="nav-btn" data-page="createOrder">Auftrag vergeben</button>
     <button class="nav-btn" data-page="admin">Admin-Kalender</button>
     <button class="nav-btn" data-page="register">Registrierung / Login</button>
@@ -511,8 +523,38 @@
     <section id="page-applications" class="page hidden">
       <div class="card">
         <h2 style="margin-top:0">Meine Bewerbungen</h2>
-        <div class="muted" style="margin-bottom:14px">Alle Aufträge, bei denen du Interesse bekundet hast.</div>
+        <div class="muted" style="margin-bottom:14px">Behalte im Blick, wo du dich beworben hast und ob ein Auftrag bereits an dich vergeben wurde.</div>
         <div id="applicationsList"></div>
+      </div>
+    </section>
+
+    <section id="page-profile" class="page hidden">
+      <div class="card" style="max-width:900px">
+        <h2 style="margin-top:0">Firmenprofil</h2>
+        <div class="muted" style="margin-bottom:14px">Dieses Profil hilft Auftraggebern und Partnern, dein Unternehmen besser einzuschätzen.</div>
+
+        <div class="two-col">
+          <input id="profileCompany" placeholder="Firmenname">
+          <input id="profileLocation" placeholder="Standort">
+          <input id="profilePhone" placeholder="Telefon">
+          <input id="profileEmail" placeholder="Kontakt-E-Mail">
+          <input id="profileServices" placeholder="Leistungen, z. B. DGUV, Geräteprüfung, Anlagenprüfung">
+          <input id="profileWebsite" placeholder="Website">
+        </div>
+
+        <div style="margin-top:14px">
+          <textarea id="profileDescription" placeholder="Kurzbeschreibung des Unternehmens"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-success" onclick="saveProfile()">Profil speichern</button>
+          <button class="btn btn-outline" onclick="loadProfileIntoForm()">Profil neu laden</button>
+        </div>
+
+        <div style="margin-top:20px">
+          <h3>Profilvorschau</h3>
+          <div id="profilePreview" class="info-box"></div>
+        </div>
       </div>
     </section>
 
@@ -647,6 +689,8 @@ function updateNameDisplay(){
   if(announcerInput && isLoggedIn() && !announcerInput.value){
     announcerInput.value = getChatName();
   }
+
+  renderProfilePreview();
 }
 
 function logout(){
@@ -713,7 +757,7 @@ function showPage(page){
     return alert("Bitte zuerst registrieren oder einloggen.");
   }
 
-  if(page === "myOrders" && !isLoggedIn()){
+  if((page === "myOrders" || page === "applications" || page === "profile") && !isLoggedIn()){
     return alert("Bitte zuerst registrieren oder einloggen.");
   }
 
@@ -726,6 +770,10 @@ function showPage(page){
     b.classList.toggle("active", b.dataset.page === page);
   });
 
+  if(page === "profile"){
+    loadProfileIntoForm();
+  }
+
   render();
 }
 
@@ -735,6 +783,85 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 
 function statusClass(status){
   return "status-" + String(status).replaceAll(" ","");
+}
+
+function profileKey(){
+  return "companyProfile_" + normalizeName(getChatName());
+}
+
+function getProfile(){
+  if(!isLoggedIn()) return null;
+  try{
+    return JSON.parse(localStorage.getItem(profileKey()) || "null");
+  }catch(e){
+    return null;
+  }
+}
+
+function saveProfile(){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const profile = {
+    company: document.getElementById("profileCompany").value.trim() || getChatName(),
+    location: document.getElementById("profileLocation").value.trim(),
+    phone: document.getElementById("profilePhone").value.trim(),
+    email: document.getElementById("profileEmail").value.trim(),
+    services: document.getElementById("profileServices").value.trim(),
+    website: document.getElementById("profileWebsite").value.trim(),
+    description: document.getElementById("profileDescription").value.trim()
+  };
+
+  localStorage.setItem(profileKey(), JSON.stringify(profile));
+  renderProfilePreview();
+  alert("Firmenprofil gespeichert.");
+}
+
+function loadProfileIntoForm(){
+  if(!isLoggedIn()){
+    return alert("Bitte zuerst registrieren oder einloggen.");
+  }
+
+  const profile = getProfile() || { company:getChatName(), location:"", phone:"", email:"", services:"", website:"", description:"" };
+
+  const fields = {
+    profileCompany: profile.company || getChatName(),
+    profileLocation: profile.location || "",
+    profilePhone: profile.phone || "",
+    profileEmail: profile.email || "",
+    profileServices: profile.services || "",
+    profileWebsite: profile.website || "",
+    profileDescription: profile.description || ""
+  };
+
+  Object.entries(fields).forEach(([id,value]) => {
+    const el = document.getElementById(id);
+    if(el) el.value = value;
+  });
+
+  renderProfilePreview();
+}
+
+function renderProfilePreview(){
+  const preview = document.getElementById("profilePreview");
+  if(!preview) return;
+
+  if(!isLoggedIn()){
+    preview.innerHTML = `<span class="muted">Bitte einloggen, um dein Firmenprofil zu bearbeiten.</span>`;
+    return;
+  }
+
+  const profile = getProfile() || { company:getChatName() };
+  preview.innerHTML = `
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px">${escapeText(profile.company || getChatName())}</div>
+    <div class="muted" style="margin-bottom:10px">${escapeText(profile.description || "Noch keine Beschreibung hinterlegt.")}</div>
+    <div><strong>Standort:</strong> ${escapeText(profile.location || "Nicht angegeben")}</div>
+    <div><strong>Leistungen:</strong> ${escapeText(profile.services || "Nicht angegeben")}</div>
+    <div><strong>Telefon:</strong> ${escapeText(profile.phone || "Nicht angegeben")}</div>
+    <div><strong>E-Mail:</strong> ${escapeText(profile.email || "Nicht angegeben")}</div>
+    <div><strong>Website:</strong> ${escapeText(profile.website || "Nicht angegeben")}</div>
+  `;
 }
 
 function myOrders(){
