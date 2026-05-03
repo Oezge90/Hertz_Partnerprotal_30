@@ -12,6 +12,7 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hertz-Partnerportal</title>
 
   <style>
     :root{
@@ -83,10 +84,14 @@
     }
 
     .brand-logo{
-  width:140px;
-  height:auto;
-  object-fit:contain;
-}
+      width:60px;
+      height:60px;
+      object-fit:contain;
+      border-radius:18px;
+      background:white;
+      padding:6px;
+      box-shadow:0 10px 25px rgba(0,0,0,.08),0 0 20px rgba(37,99,235,.15);
+    }
 
     .muted{color:var(--muted)}
     .tiny{font-size:12px}
@@ -402,9 +407,13 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand" style="justify-content:center;">
-  <img src="logo.png" class="brand-logo" alt="Logo">
-</div>
+    <div class="brand">
+      <img src="logo.png" class="brand-logo" alt="Heinrich Hertz Elektrotechnik GmbH Logo">
+      <div>
+        <div style="font-weight:700">Hertz-Partnerportal</div>
+        <div class="muted tiny">Partnernetzwerk & Auftragsvergabe</div>
+      </div>
+    </div>
 
     <button class="nav-btn active" data-page="dashboard">Dashboard</button>
     <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
@@ -428,20 +437,18 @@
 
   <main class="content">
     <section class="panel">
-    <div class="panel-head">
-  <div>
-    <h1 style="margin:0 0 6px">Hertz-Partnerportal</h1>
-    <div class="muted" style="font-size:16px;margin-bottom:4px">
-      Partnernetzwerk & Auftragsvergabe
-    </div>
-  </div>
+      <div class="panel-head">
+        <div>
+          <h1 style="margin:0 0 6px">Hertz-Partnerportal</h1>
+          <div class="muted">Online-Version als direkt hochladbare Web-App</div>
+        </div>
 
-  <div class="search-row">
-    <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
-    <button class="btn btn-primary" onclick="showPage('orders')">Aufträge finden</button>
-    <button class="btn btn-success" onclick="showPage('createOrder')">Auftrag vergeben</button>
-  </div>
-</div>  
+        <div class="search-row">
+          <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
+          <button class="btn btn-primary" onclick="showPage('orders')">Aufträge finden</button>
+          <button class="btn btn-success" onclick="showPage('createOrder')">Auftrag vergeben</button>
+        </div>
+      </div>
     </section>
 
     <section id="page-dashboard" class="page">
@@ -615,6 +622,7 @@
 <script>
 let state = {
   orders: [],
+  profiles: {},
   activities: [
     {id:1,date:"2026-04-23",time:"08:30",type:"Registrierung",user:"Baran Alagöz",details:"Neuer Partner registriert und Profil vervollständigt."},
     {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg veröffentlicht."},
@@ -724,23 +732,35 @@ async function loadFromSupabase(){
   if(error){
     console.error("Fehler beim Laden der Aufträge:", error);
     state.orders = [];
-    render();
-    return;
+  } else {
+    state.orders = (data || []).map(order => ({
+      id: order.id,
+      title: order.title || "Ohne Titel",
+      city: order.city || "Ohne Ort",
+      price: order.price || 0,
+      volume: order.volume || "Nicht angegeben",
+      date: order.date || "",
+      announcer: order.announcer || "Unbekannt",
+      status: order.status || "Offen",
+      description: order.description || "Keine Beschreibung vorhanden.",
+      interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
+      assignedPartner: order.assignedPartner || ""
+    }));
   }
 
-  state.orders = (data || []).map(order => ({
-    id: order.id,
-    title: order.title || "Ohne Titel",
-    city: order.city || "Ohne Ort",
-    price: order.price || 0,
-    volume: order.volume || "Nicht angegeben",
-    date: order.date || "",
-    announcer: order.announcer || "Unbekannt",
-    status: order.status || "Offen",
-    description: order.description || "Keine Beschreibung vorhanden.",
-    interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
-    assignedPartner: order.assignedPartner || ""
-  }));
+  const { data: profilesData, error: profilesError } = await client
+    .from("partner_profiles")
+    .select("*");
+
+  if(profilesError){
+    console.error("Fehler beim Laden der Firmenprofile:", profilesError);
+    state.profiles = {};
+  } else {
+    state.profiles = {};
+    (profilesData || []).forEach(profile => {
+      state.profiles[normalizeName(profile.owner_name)] = profile;
+    });
+  }
 
   render();
 }
@@ -778,37 +798,43 @@ function statusClass(status){
   return "status-" + String(status).replaceAll(" ","");
 }
 
-function profileKey(){
-  return "companyProfile_" + normalizeName(getChatName());
+function getProfileByName(name){
+  return state.profiles[normalizeName(name)] || null;
 }
 
 function getProfile(){
-  if(!isLoggedIn()) return null;
-  try{
-    return JSON.parse(localStorage.getItem(profileKey()) || "null");
-  }catch(e){
-    return null;
-  }
+  return getProfileByName(getChatName());
 }
 
-function saveProfile(){
+async function saveProfile(){
   if(!isLoggedIn()){
     return alert("Bitte zuerst registrieren oder einloggen.");
   }
 
   const profile = {
+    owner_name: getChatName(),
     company: document.getElementById("profileCompany").value.trim() || getChatName(),
     location: document.getElementById("profileLocation").value.trim(),
     phone: document.getElementById("profilePhone").value.trim(),
     email: document.getElementById("profileEmail").value.trim(),
     services: document.getElementById("profileServices").value.trim(),
     website: document.getElementById("profileWebsite").value.trim(),
-    description: document.getElementById("profileDescription").value.trim()
+    description: document.getElementById("profileDescription").value.trim(),
+    updated_at: new Date().toISOString()
   };
 
-  localStorage.setItem(profileKey(), JSON.stringify(profile));
-  renderProfilePreview();
+  const { error } = await client
+    .from("partner_profiles")
+    .upsert([profile], { onConflict: "owner_name" });
+
+  if(error){
+    console.error("Fehler beim Speichern des Firmenprofils:", error);
+    return alert("Firmenprofil konnte nicht gespeichert werden.");
+  }
+
   alert("Firmenprofil gespeichert.");
+  await loadFromSupabase();
+  loadProfileIntoForm();
 }
 
 function loadProfileIntoForm(){
@@ -855,6 +881,35 @@ function renderProfilePreview(){
     <div><strong>E-Mail:</strong> ${escapeText(profile.email || "Nicht angegeben")}</div>
     <div><strong>Website:</strong> ${escapeText(profile.website || "Nicht angegeben")}</div>
   `;
+}
+
+function viewCompanyProfile(name){
+  const profile = getProfileByName(name);
+
+  if(!profile){
+    return alert("Für " + name + " wurde noch kein Firmenprofil angelegt.");
+  }
+
+  alert(
+    "Firmenprofil
+
+" +
+    "Firma: " + (profile.company || name) + "
+" +
+    "Standort: " + (profile.location || "Nicht angegeben") + "
+" +
+    "Leistungen: " + (profile.services || "Nicht angegeben") + "
+" +
+    "Telefon: " + (profile.phone || "Nicht angegeben") + "
+" +
+    "E-Mail: " + (profile.email || "Nicht angegeben") + "
+" +
+    "Website: " + (profile.website || "Nicht angegeben") + "
+
+" +
+    "Beschreibung:
+" + (profile.description || "Keine Beschreibung hinterlegt.")
+  );
 }
 
 function myOrders(){
@@ -981,7 +1036,8 @@ function interestedPartnersHtml(order){
           <div class="interest-row">
             <div>
               <strong>${escapeText(partner)}</strong><br>
-              <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
+              <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span><br>
+              <button class="btn btn-outline" style="padding:6px 10px;margin-top:6px" onclick="viewCompanyProfile('${jsArg(partner)}')">Profil ansehen</button>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-outline" onclick="messageInterestedPartner('${order.id}', '${jsArg(partner)}')">Nachricht schreiben</button>
@@ -1049,7 +1105,7 @@ function orderCard(order){
     </div>
 
     <div class="info-box">
-      <div>Annonciert von: <strong>${escapeText(order.announcer)}</strong></div>
+      <div>Annonciert von: <strong>${escapeText(order.announcer)}</strong> <button class="btn btn-outline" style="padding:6px 10px;margin-left:8px" onclick="viewCompanyProfile('${jsArg(order.announcer)}')">Profil ansehen</button></div>
       <div>Vergebener Partner: <strong>${order.assignedPartner ? escapeText(order.assignedPartner) : "Noch nicht vergeben"}</strong></div>
     </div>
 
