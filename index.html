@@ -12,6 +12,8 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hertz-Partnerportal</title>
+  <link rel="icon" href="logo.png">
 
   <style>
     :root{
@@ -64,29 +66,18 @@
 
     .brand{
       display:flex;
-      gap:12px;
+      justify-content:center;
       align-items:center;
       margin-bottom:24px;
-    }
-
-    .brand-badge{
-      width:46px;
-      height:46px;
-      border-radius:16px;
-      background:linear-gradient(135deg,var(--primary),var(--primary-light));
-      color:white;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      box-shadow:0 12px 28px rgba(37,99,235,.25);
+      padding:10px 0 12px;
     }
 
     .brand-logo{
-  width:140px;
-  height:auto;
-  object-fit:contain;
-}
+      width:170px;
+      height:auto;
+      object-fit:contain;
+      display:block;
+    }
 
     .muted{color:var(--muted)}
     .tiny{font-size:12px}
@@ -142,16 +133,20 @@
       gap:20px;
     }
 
-    .panel,.card{
-      padding:22px 24px;
-    }
+    .panel,.card{padding:22px 24px}
 
     .panel-head{
       display:flex;
       justify-content:space-between;
-      gap:16px;
+      gap:22px;
       align-items:center;
       flex-wrap:wrap;
+    }
+
+    .header-title h1{
+      margin:0 0 6px;
+      font-size:32px;
+      letter-spacing:-.02em;
     }
 
     input,select,textarea{
@@ -164,18 +159,16 @@
       background:white;
     }
 
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
+    textarea{min-height:110px;resize:vertical}
 
     .search-row{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      align-items:center;
     }
 
-    .search{min-width:280px}
+    .search{min-width:320px}
 
     .btn{
       border:none;
@@ -184,6 +177,8 @@
       padding:12px 16px;
       font-weight:700;
       font-size:14px;
+      transition:.15s ease;
+      white-space:nowrap;
     }
 
     .btn:disabled{opacity:.55;cursor:not-allowed}
@@ -191,7 +186,7 @@
     .btn-success{background:var(--accent);color:white;box-shadow:0 10px 20px rgba(32,180,134,.14)}
     .btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
     .btn-danger{background:#fee2e2;color:#991b1b}
-    .btn:hover{transform:translateY(-1px)}
+    .btn:hover:not(:disabled){transform:translateY(-1px)}
 
     .stats{
       display:grid;
@@ -319,19 +314,11 @@
       align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      padding:10px 0;
+      padding:12px 0;
       border-top:1px solid #fde68a;
     }
 
     .interest-row:first-of-type{border-top:none}
-
-    .notice-box{
-      padding:14px;
-      border-radius:18px;
-      background:#fff7ed;
-      border:1px solid #fed7aa;
-      margin-bottom:14px;
-    }
 
     .application-box{
       padding:14px;
@@ -341,10 +328,7 @@
       margin-bottom:12px;
     }
 
-    .recipient-select{
-      max-width:240px;
-      border-radius:999px;
-    }
+    .recipient-select{max-width:240px;border-radius:999px}
 
     .actions{
       display:flex;
@@ -378,11 +362,7 @@
       background:#f8fcff;
     }
 
-    .chat-list{
-      max-height:360px;
-      overflow-y:auto;
-      padding:6px;
-    }
+    .chat-list{max-height:360px;overflow-y:auto;padding:6px}
 
     .chat-input-row{
       display:flex;
@@ -393,18 +373,128 @@
 
     .chat-input-row input{border-radius:999px}
 
+    .profile-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.48);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+
+    .profile-modal.open{display:flex}
+
+    .profile-card{
+      width:min(760px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:white;
+      border-radius:28px;
+      border:1px solid var(--border);
+      box-shadow:0 25px 80px rgba(15,23,42,.28);
+      position:relative;
+    }
+
+    .profile-cover{
+      height:150px;
+      border-radius:28px 28px 0 0;
+      background:linear-gradient(135deg,#1d4ed8,#38bdf8);
+      position:relative;
+    }
+
+    .profile-avatar{
+      width:104px;
+      height:104px;
+      border-radius:28px;
+      background:white;
+      border:5px solid white;
+      box-shadow:0 12px 25px rgba(15,23,42,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:38px;
+      font-weight:800;
+      color:var(--primary);
+      position:absolute;
+      left:28px;
+      bottom:-52px;
+      overflow:hidden;
+    }
+
+    .profile-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      padding:10px;
+    }
+
+    .profile-close{
+      position:absolute;
+      top:16px;
+      right:16px;
+      border:none;
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      background:white;
+      cursor:pointer;
+      font-size:20px;
+      box-shadow:0 10px 20px rgba(15,23,42,.12);
+    }
+
+    .profile-body{padding:68px 28px 28px}
+
+    .profile-name{
+      font-size:28px;
+      font-weight:800;
+      margin:0 0 6px;
+      letter-spacing:-.02em;
+    }
+
+    .profile-subline{color:var(--muted);margin-bottom:16px}
+
+    .profile-tags{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+
+    .profile-tag{
+      padding:8px 12px;
+      border-radius:999px;
+      background:#eff6ff;
+      color:#1d4ed8;
+      border:1px solid #bfdbfe;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .profile-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .profile-info{
+      padding:14px;
+      border-radius:18px;
+      background:#f8fbff;
+      border:1px solid var(--border);
+    }
+
+    .profile-info strong{display:block;margin-bottom:4px}
+
     @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
-    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}}
-    @media(max-width:640px){.meta,.two-col,.stats{grid-template-columns:1fr}.search{min-width:100%}}
+    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}.search{min-width:240px}}
+    @media(max-width:640px){.meta,.two-col,.stats,.hero-grid,.profile-grid{grid-template-columns:1fr}.search{min-width:100%}.brand-logo{width:140px}.profile-name{font-size:22px}}
   </style>
 </head>
 
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand" style="justify-content:center;">
-  <img src="logo.png" class="brand-logo" alt="Logo">
-</div>
+    <div class="brand">
+      <img src="logo.png" class="brand-logo" alt="Heinrich Hertz Elektrotechnik GmbH Logo">
+    </div>
 
     <button class="nav-btn active" data-page="dashboard">Dashboard</button>
     <button class="nav-btn" data-page="orders">Aufträge entdecken</button>
@@ -422,26 +512,23 @@
       <div style="font-size:12px;color:#666">Angemeldet als:</div>
       <div id="currentUserName" style="font-weight:bold;margin-bottom:4px"></div>
       <div id="currentUserRole" style="font-size:12px;color:#666;margin-bottom:8px"></div>
-      <button class="btn btn-outline" onclick="logout()">Logout</button>
+      <button class="btn btn-outline" data-action="logout">Logout</button>
     </div>
   </aside>
 
   <main class="content">
     <section class="panel">
-    <div class="panel-head">
-  <div>
-    <h1 style="margin:0 0 6px">Hertz-Partnerportal</h1>
-    <div class="muted" style="font-size:16px;margin-bottom:4px">
-      Partnernetzwerk & Auftragsvergabe
-    </div>
-  </div>
-
-  <div class="search-row">
-    <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
-    <button class="btn btn-primary" onclick="showPage('orders')">Aufträge finden</button>
-    <button class="btn btn-success" onclick="showPage('createOrder')">Auftrag vergeben</button>
-  </div>
-</div>  
+      <div class="panel-head">
+        <div class="header-title">
+          <h1>Hertz-Partnerportal</h1>
+          <div class="muted" style="font-size:16px;margin-bottom:4px">Partnernetzwerk & Auftragsvergabe</div>
+        </div>
+        <div class="search-row">
+          <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
+          <button class="btn btn-primary" data-action="page" data-page="orders">Aufträge finden</button>
+          <button class="btn btn-success" data-action="page" data-page="createOrder">Auftrag vergeben</button>
+        </div>
+      </div>
     </section>
 
     <section id="page-dashboard" class="page">
@@ -471,18 +558,16 @@
       <div class="grid-2" style="margin-top:20px">
         <div class="card">
           <h2 style="margin-top:0">Auftragssuchende sehen annoncierte Aufträge</h2>
-          <div class="muted" style="margin-bottom:14px">
-            Jeder Partner kann Aufträge annoncieren und Interesse an Aufträgen anderer Partner bekunden.
-          </div>
+          <div class="muted" style="margin-bottom:14px">Jeder Partner kann Aufträge annoncieren und Interesse an Aufträgen anderer Partner bekunden.</div>
           <div id="dashboardOrders"></div>
-          <button class="btn btn-outline" onclick="showPage('orders')">Alle Aufträge ansehen</button>
+          <button class="btn btn-outline" data-action="page" data-page="orders">Alle Aufträge ansehen</button>
         </div>
 
         <div class="card">
           <h2 style="margin-top:0">Meine Aufträge mit Interessenten</h2>
           <div class="muted" style="margin-bottom:14px">Hier sieht der Auftragsersteller sofort, wer Interesse bekundet hat.</div>
           <div id="dashboardMyOrders"></div>
-          <button class="btn btn-outline" onclick="showPage('myOrders')">Meine Aufträge öffnen</button>
+          <button class="btn btn-outline" data-action="page" data-page="myOrders">Meine Aufträge öffnen</button>
         </div>
       </div>
     </section>
@@ -494,13 +579,11 @@
             <h2 style="margin-top:0">Aufträge entdecken</h2>
             <div class="muted">Offene Aufträge, Interesse, Chat und Vergabe.</div>
           </div>
-
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <input id="orderSearch" placeholder="Aufträge durchsuchen" style="width:240px">
             <select id="cityFilter" style="width:190px"></select>
           </div>
         </div>
-
         <div id="ordersList" style="margin-top:16px"></div>
       </div>
     </section>
@@ -540,8 +623,8 @@
         </div>
 
         <div class="actions">
-          <button class="btn btn-success" onclick="saveProfile()">Profil speichern</button>
-          <button class="btn btn-outline" onclick="loadProfileIntoForm()">Profil neu laden</button>
+          <button class="btn btn-success" data-action="saveProfile">Profil speichern</button>
+          <button class="btn btn-outline" data-action="loadProfile">Profil neu laden</button>
         </div>
 
         <div style="margin-top:20px">
@@ -555,7 +638,6 @@
       <div class="card">
         <h2 style="margin-top:0">Neuen Auftrag einstellen</h2>
         <div class="muted" style="margin-bottom:14px">Jeder eingeloggte Partner darf Aufträge annoncieren.</div>
-
         <div class="two-col">
           <input id="newTitle" placeholder="Auftragstitel">
           <input id="newCity" placeholder="Ausführungsort">
@@ -564,13 +646,11 @@
           <input id="newDate" type="date">
           <input id="newAnnouncer" placeholder="Annoncierender Partner / Firma">
         </div>
-
         <div style="margin-top:14px">
           <textarea id="newDescription" placeholder="Beschreibung"></textarea>
         </div>
-
         <div class="actions">
-          <button class="btn btn-success" onclick="createOrder()">Auftrag veröffentlichen</button>
+          <button class="btn btn-success" data-action="createOrder">Auftrag veröffentlichen</button>
         </div>
       </div>
     </section>
@@ -582,7 +662,6 @@
     <section id="page-register" class="page hidden">
       <div class="card" style="max-width:760px">
         <h2 style="margin-top:0">Partner-Registrierung</h2>
-
         <div class="two-col">
           <input id="regName" placeholder="Unternehmen / Ansprechpartner">
           <input id="regEmail" placeholder="E-Mail-Adresse">
@@ -592,29 +671,54 @@
             <option value="Admin">Admin</option>
           </select>
         </div>
-
         <div class="actions">
-          <button class="btn btn-primary" onclick="registerPartner()">Registrieren</button>
+          <button class="btn btn-primary" data-action="register">Registrieren</button>
         </div>
 
         <h2 style="margin-top:30px">Login</h2>
-
         <div class="two-col">
           <input id="loginEmail" placeholder="E-Mail">
           <input id="loginPassword" type="password" placeholder="Passwort">
         </div>
-
         <div class="actions">
-          <button class="btn btn-primary" onclick="login()">Login</button>
+          <button class="btn btn-primary" data-action="login">Login</button>
         </div>
       </div>
     </section>
   </main>
 </div>
 
+<div id="profileModal" class="profile-modal">
+  <div class="profile-card">
+    <button class="profile-close" data-action="closeProfile">×</button>
+    <div class="profile-cover">
+      <div class="profile-avatar" id="modalAvatar">H</div>
+    </div>
+    <div class="profile-body">
+      <h2 class="profile-name" id="modalCompany">Firmenprofil</h2>
+      <div class="profile-subline" id="modalSubline">Partner im Hertz-Partnernetzwerk</div>
+      <div class="profile-tags" id="modalTags"></div>
+      <div class="profile-info" style="margin-top:18px">
+        <strong>Über das Unternehmen</strong>
+        <div id="modalDescription" class="muted">Keine Beschreibung hinterlegt.</div>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-info"><strong>Standort</strong><span id="modalLocation">Nicht angegeben</span></div>
+        <div class="profile-info"><strong>Telefon</strong><span id="modalPhone">Nicht angegeben</span></div>
+        <div class="profile-info"><strong>E-Mail</strong><span id="modalEmail">Nicht angegeben</span></div>
+        <div class="profile-info"><strong>Website</strong><span id="modalWebsite">Nicht angegeben</span></div>
+      </div>
+      <div class="actions" style="margin-top:18px">
+        <button class="btn btn-primary" data-action="closeProfile">Schließen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 let state = {
   orders: [],
+  profiles: {},
   activities: [
     {id:1,date:"2026-04-23",time:"08:30",type:"Registrierung",user:"Baran Alagöz",details:"Neuer Partner registriert und Profil vervollständigt."},
     {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg veröffentlicht."},
@@ -623,66 +727,38 @@ let state = {
 };
 
 const refreshTimers = {};
-const replyTargets = {}; // merkt sich: Auftraggeber antwortet gezielt an diesen Interessenten
+const replyTargets = {};
 
-function getRole(){
-  return localStorage.getItem("role") || "";
-}
+function getRole(){ return localStorage.getItem("role") || ""; }
+function getChatName(){ return localStorage.getItem("chatName") || ""; }
+function normalizeName(name){ return String(name || "").trim().toLowerCase(); }
+function isLoggedIn(){ return !!localStorage.getItem("chatName"); }
+function isAdmin(){ return getRole() === "Admin"; }
+function isOwnOrder(order){ return !!order && normalizeName(order.announcer) === normalizeName(getChatName()); }
+function canExpressInterest(order){ return isLoggedIn() && !!order && !isOwnOrder(order); }
+function canAssignOrder(order){ return isLoggedIn() && (isAdmin() || isOwnOrder(order)); }
+function encodeValue(value){ return encodeURIComponent(String(value || "")); }
+function decodeValue(value){ return decodeURIComponent(String(value || "")); }
 
-function getChatName(){
-  return localStorage.getItem("chatName") || "";
-}
-
-function normalizeName(name){
-  return String(name || "").trim().toLowerCase();
-}
-
-function isLoggedIn(){
-  return !!localStorage.getItem("chatName");
-}
-
-function isAdmin(){
-  return getRole() === "Admin";
-}
-
-function canCreateOrder(){
-  return isLoggedIn();
-}
-
-function isOwnOrder(order){
-  if(!order) return false;
-  return normalizeName(order.announcer) === normalizeName(getChatName());
-}
-
-function canExpressInterest(order){
-  if(!isLoggedIn()) return false;
-  if(!order) return false;
-  return !isOwnOrder(order);
-}
-
-function canAssignOrder(order){
-  if(!isLoggedIn()) return false;
-  if(isAdmin()) return true;
-  return isOwnOrder(order);
+function escapeText(value){
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function updateNameDisplay(){
   const nameEl = document.getElementById("currentUserName");
   const roleEl = document.getElementById("currentUserRole");
-
-  if(nameEl){
-    nameEl.innerText = localStorage.getItem("chatName") || "Nicht eingeloggt";
-  }
-
-  if(roleEl){
-    roleEl.innerText = localStorage.getItem("role") || "";
-  }
+  if(nameEl) nameEl.innerText = localStorage.getItem("chatName") || "Nicht eingeloggt";
+  if(roleEl) roleEl.innerText = localStorage.getItem("role") || "";
 
   const announcerInput = document.getElementById("newAnnouncer");
   if(announcerInput && isLoggedIn() && !announcerInput.value){
     announcerInput.value = getChatName();
   }
-
   renderProfilePreview();
 }
 
@@ -696,23 +772,16 @@ function logout(){
 
 function nowTime(){
   const d = new Date();
-  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
 }
 
 function todayDate(){
   const d = new Date();
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 }
 
 function addActivity(type,user,details){
-  state.activities.unshift({
-    id:Date.now(),
-    date:todayDate(),
-    time:nowTime(),
-    type,
-    user,
-    details
-  });
+  state.activities.unshift({id:Date.now(),date:todayDate(),time:nowTime(),type,user,details});
 }
 
 async function loadFromSupabase(){
@@ -724,100 +793,90 @@ async function loadFromSupabase(){
   if(error){
     console.error("Fehler beim Laden der Aufträge:", error);
     state.orders = [];
-    render();
-    return;
+  } else {
+    state.orders = (data || []).map(order => ({
+      id: order.id,
+      title: order.title || "Ohne Titel",
+      city: order.city || "Ohne Ort",
+      price: order.price || 0,
+      volume: order.volume || "Nicht angegeben",
+      date: order.date || "",
+      announcer: order.announcer || "Unbekannt",
+      status: order.status || "Offen",
+      description: order.description || "Keine Beschreibung vorhanden.",
+      interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
+      assignedPartner: order.assignedPartner || ""
+    }));
   }
 
-  state.orders = (data || []).map(order => ({
-    id: order.id,
-    title: order.title || "Ohne Titel",
-    city: order.city || "Ohne Ort",
-    price: order.price || 0,
-    volume: order.volume || "Nicht angegeben",
-    date: order.date || "",
-    announcer: order.announcer || "Unbekannt",
-    status: order.status || "Offen",
-    description: order.description || "Keine Beschreibung vorhanden.",
-    interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
-    assignedPartner: order.assignedPartner || ""
-  }));
+  const { data: profilesData, error: profilesError } = await client
+    .from("partner_profiles")
+    .select("*");
+
+  if(profilesError){
+    console.warn("Firmenprofile konnten nicht geladen werden. Falls partner_profiles noch nicht existiert, ist das bis zum SQL-Schritt normal.", profilesError);
+    state.profiles = {};
+  } else {
+    state.profiles = {};
+    (profilesData || []).forEach(profile => {
+      state.profiles[normalizeName(profile.owner_name)] = profile;
+    });
+  }
 
   render();
 }
 
 function showPage(page){
-  if(page === "createOrder" && !isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
+  if(page === "createOrder" && !isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
+  if(["myOrders","applications","profile"].includes(page) && !isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
 
-  if((page === "myOrders" || page === "applications" || page === "profile") && !isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
-
-  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
-
-  const target = document.getElementById("page-"+page);
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  const target = document.getElementById("page-" + page);
   if(target) target.classList.remove("hidden");
 
-  document.querySelectorAll(".nav-btn").forEach(b=>{
-    b.classList.toggle("active", b.dataset.page === page);
-  });
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === page));
 
-  if(page === "profile"){
-    loadProfileIntoForm();
-  }
-
+  if(page === "profile") loadProfileIntoForm();
   render();
 }
 
-document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.onclick = () => showPage(btn.dataset.page);
-});
+function statusClass(status){ return "status-" + String(status || "").replaceAll(" ",""); }
+function getProfileByName(name){ return state.profiles[normalizeName(name)] || null; }
+function getProfile(){ return getProfileByName(getChatName()); }
 
-function statusClass(status){
-  return "status-" + String(status).replaceAll(" ","");
-}
-
-function profileKey(){
-  return "companyProfile_" + normalizeName(getChatName());
-}
-
-function getProfile(){
-  if(!isLoggedIn()) return null;
-  try{
-    return JSON.parse(localStorage.getItem(profileKey()) || "null");
-  }catch(e){
-    return null;
-  }
-}
-
-function saveProfile(){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
+async function saveProfile(){
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
 
   const profile = {
+    owner_name: getChatName(),
     company: document.getElementById("profileCompany").value.trim() || getChatName(),
     location: document.getElementById("profileLocation").value.trim(),
     phone: document.getElementById("profilePhone").value.trim(),
     email: document.getElementById("profileEmail").value.trim(),
     services: document.getElementById("profileServices").value.trim(),
     website: document.getElementById("profileWebsite").value.trim(),
-    description: document.getElementById("profileDescription").value.trim()
+    description: document.getElementById("profileDescription").value.trim(),
+    updated_at: new Date().toISOString()
   };
 
-  localStorage.setItem(profileKey(), JSON.stringify(profile));
-  renderProfilePreview();
+  const { error } = await client
+    .from("partner_profiles")
+    .upsert([profile], { onConflict: "owner_name" });
+
+  if(error){
+    console.error("Fehler beim Speichern des Firmenprofils:", error);
+    return alert("Firmenprofil konnte nicht gespeichert werden. Bitte prüfe, ob die Tabelle partner_profiles in Supabase existiert.");
+  }
+
   alert("Firmenprofil gespeichert.");
+  await loadFromSupabase();
+  loadProfileIntoForm();
 }
 
 function loadProfileIntoForm(){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
 
-  const profile = getProfile() || { company:getChatName(), location:"", phone:"", email:"", services:"", website:"", description:"" };
-
+  const profile = getProfile() || {company:getChatName(),location:"",phone:"",email:"",services:"",website:"",description:""};
   const fields = {
     profileCompany: profile.company || getChatName(),
     profileLocation: profile.location || "",
@@ -832,7 +891,6 @@ function loadProfileIntoForm(){
     const el = document.getElementById(id);
     if(el) el.value = value;
   });
-
   renderProfilePreview();
 }
 
@@ -841,7 +899,7 @@ function renderProfilePreview(){
   if(!preview) return;
 
   if(!isLoggedIn()){
-    preview.innerHTML = `<span class="muted">Bitte einloggen, um dein Firmenprofil zu bearbeiten.</span>`;
+    preview.innerHTML = '<span class="muted">Bitte einloggen, um dein Firmenprofil zu bearbeiten.</span>';
     return;
   }
 
@@ -857,11 +915,58 @@ function renderProfilePreview(){
   `;
 }
 
-function myOrders(){
-  const name = getChatName();
-  if(!name) return [];
-  return state.orders.filter(order => isOwnOrder(order));
+async function openCompanyProfile(encodedName){
+  const name = decodeValue(encodedName);
+  let profile = getProfileByName(name);
+
+  if(!profile){
+    const { data, error } = await client
+      .from("partner_profiles")
+      .select("*")
+      .eq("owner_name", name)
+      .maybeSingle();
+
+    if(!error && data){
+      profile = data;
+      state.profiles[normalizeName(data.owner_name)] = data;
+    }
+  }
+
+  const displayName = profile?.company || name;
+  document.getElementById("modalCompany").innerText = displayName;
+  document.getElementById("modalSubline").innerText = profile?.services || "Partner im Hertz-Partnernetzwerk";
+  document.getElementById("modalDescription").innerText = profile?.description || "Dieses Unternehmen hat noch keine Beschreibung hinterlegt.";
+  document.getElementById("modalLocation").innerText = profile?.location || "Nicht angegeben";
+  document.getElementById("modalPhone").innerText = profile?.phone || "Nicht angegeben";
+  document.getElementById("modalEmail").innerText = profile?.email || "Nicht angegeben";
+  document.getElementById("modalWebsite").innerText = profile?.website || "Nicht angegeben";
+
+  const avatar = document.getElementById("modalAvatar");
+  avatar.innerHTML = "";
+  if(normalizeName(displayName).includes("heinrich") || normalizeName(displayName).includes("hertz")){
+    const img = document.createElement("img");
+    img.src = "logo.png";
+    img.alt = "Logo";
+    avatar.appendChild(img);
+  } else {
+    avatar.innerText = String(displayName || "P").trim().charAt(0).toUpperCase() || "P";
+  }
+
+  const tags = [];
+  if(profile?.location) tags.push("📍 " + profile.location);
+  if(profile?.services) tags.push("⚡ " + profile.services);
+  if(profile?.website) tags.push("🌐 Website hinterlegt");
+  if(!tags.length) tags.push("Partnerprofil");
+
+  document.getElementById("modalTags").innerHTML = tags.map(tag => `<span class="profile-tag">${escapeText(tag)}</span>`).join("");
+  document.getElementById("profileModal").classList.add("open");
 }
+
+function closeCompanyProfile(){
+  document.getElementById("profileModal").classList.remove("open");
+}
+
+function myOrders(){ return isLoggedIn() ? state.orders.filter(order => isOwnOrder(order)) : []; }
 
 function myApplications(){
   const name = getChatName();
@@ -872,13 +977,12 @@ function myApplications(){
 function pendingInterestCount(){
   return myOrders()
     .filter(o => !["Vergeben","Abgeschlossen"].includes(o.status))
-    .reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0);
+    .reduce((sum,o) => sum + (o.interestedPartners || []).length, 0);
 }
 
 function updateNavBadges(){
   const myOrdersBadge = document.getElementById("myOrdersNavBadge");
   const applicationsBadge = document.getElementById("applicationsNavBadge");
-
   const interestCount = pendingInterestCount();
   const applicationCount = myApplications().length;
 
@@ -886,7 +990,6 @@ function updateNavBadges(){
     myOrdersBadge.style.display = interestCount ? "inline-block" : "none";
     myOrdersBadge.innerText = interestCount;
   }
-
   if(applicationsBadge){
     applicationsBadge.style.display = applicationCount ? "inline-block" : "none";
     applicationsBadge.innerText = applicationCount;
@@ -896,11 +999,10 @@ function updateNavBadges(){
 function statsData(){
   const own = myOrders();
   const ownOpenInterests = pendingInterestCount();
-
   return [
-    ["Offene Aufträge", state.orders.filter(o=>o.status==="Offen").length, "Aktuell annoncierte Aufträge"],
-    ["In Verhandlung", state.orders.filter(o=>o.status==="In Verhandlung").length, "Mit Interessenten"],
-    ["Vergeben", state.orders.filter(o=>o.status==="Vergeben").length, "An Partner zugeteilt"],
+    ["Offene Aufträge", state.orders.filter(o => o.status === "Offen").length, "Aktuell annoncierte Aufträge"],
+    ["In Verhandlung", state.orders.filter(o => o.status === "In Verhandlung").length, "Mit Interessenten"],
+    ["Vergeben", state.orders.filter(o => o.status === "Vergeben").length, "An Partner zugeteilt"],
     ["Meine Aufträge", own.length, "Von dir annonciert"],
     ["Interessenten", ownOpenInterests, "Für deine Aufträge"],
     ["Aktivitäten", state.activities.length, "Für Admin protokolliert"]
@@ -910,12 +1012,11 @@ function statsData(){
 function renderStats(){
   const stats = document.getElementById("stats");
   if(!stats) return;
-
   stats.innerHTML = statsData().map(([title,value,sub]) => `
     <div class="card">
-      <div class="muted tiny">${title}</div>
-      <div class="stat-value">${value}</div>
-      <div class="muted tiny">${sub}</div>
+      <div class="muted tiny">${escapeText(title)}</div>
+      <div class="stat-value">${escapeText(value)}</div>
+      <div class="muted tiny">${escapeText(sub)}</div>
     </div>
   `).join("");
 }
@@ -926,32 +1027,9 @@ function getFilteredOrders(){
   const city = document.getElementById("cityFilter")?.value || "all";
 
   return state.orders.filter(order => {
-    const hay = [
-      order.title,
-      order.city,
-      order.announcer,
-      order.description,
-      order.assignedPartner,
-      ...(order.interestedPartners || [])
-    ].join(" ").toLowerCase();
-
-    return (!global || hay.includes(global)) &&
-           (!search || hay.includes(search)) &&
-           (city === "all" || order.city === city);
+    const hay = [order.title,order.city,order.announcer,order.description,order.assignedPartner,...(order.interestedPartners || [])].join(" ").toLowerCase();
+    return (!global || hay.includes(global)) && (!search || hay.includes(search)) && (city === "all" || order.city === city);
   });
-}
-
-function escapeText(value){
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function jsArg(value){
-  return String(value || "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
 }
 
 function interestedPartnersHtml(order){
@@ -960,22 +1038,16 @@ function interestedPartnersHtml(order){
   const currentUserHasInterest = partners.some(p => normalizeName(p) === normalizeName(getChatName()));
   const ownerCanAssign = ownerOrAdmin && !["Vergeben","Abgeschlossen"].includes(order.status);
 
-  // Nur Auftraggeber/Admin sehen die komplette Interessentenliste.
   if(ownerOrAdmin){
     if(!partners.length){
-      return `
-        <div class="interest-box">
-          <strong>Interessenten</strong><br>
-          <span class="muted">Noch keine Interessenten.</span>
-        </div>
-      `;
+      return `<div class="interest-box"><strong>Interessenten</strong><br><span class="muted">Noch keine Interessenten.</span></div>`;
     }
 
     return `
       <div class="interest-box">
         <div class="row" style="margin-bottom:8px">
           <strong>Interessenten (${partners.length})</strong>
-          ${isOwnOrder(order) ? `<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>` : ""}
+          ${isOwnOrder(order) ? '<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>' : ''}
         </div>
         ${partners.map(partner => `
           <div class="interest-row">
@@ -984,22 +1056,20 @@ function interestedPartnersHtml(order){
               <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-outline" onclick="messageInterestedPartner('${order.id}', '${jsArg(partner)}')">Nachricht schreiben</button>
-              ${ownerCanAssign ? `<button class="btn btn-success" onclick="assignOrder('${order.id}', '${jsArg(partner)}')">An diesen Partner vergeben</button>` : ""}
+              <button class="btn btn-outline" data-action="profile" data-name="${encodeValue(partner)}">Profil ansehen</button>
+              <button class="btn btn-outline" data-action="messagePartner" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Nachricht schreiben</button>
+              ${ownerCanAssign ? `<button class="btn btn-success" data-action="assign" data-order-id="${order.id}" data-name="${encodeValue(partner)}">An diesen Partner vergeben</button>` : ''}
             </div>
           </div>
         `).join("")}
-      </div>
-    `;
+      </div>`;
   }
 
-  // Andere Interessenten sehen NICHT, wer sich noch beworben hat.
   return `
     <div class="interest-box">
       <strong>Interessenten</strong><br>
       <span class="muted">${currentUserHasInterest ? "Du hast Interesse bekundet. Der Auftraggeber sieht deine Anfrage." : "Interessentenliste nur für den Auftraggeber sichtbar."}</span>
-    </div>
-  `;
+    </div>`;
 }
 
 function orderCard(order){
@@ -1008,25 +1078,21 @@ function orderCard(order){
   const partners = order.interestedPartners || [];
   const recipientOptions = partners.map(p => `<option value="${escapeText(p)}">${escapeText(p)}</option>`).join("");
   const ownerRecipientSelect = own || isAdmin()
-    ? `<select id="recipient-${order.id}" class="recipient-select">
-         <option value="">Empfänger wählen</option>
-         ${recipientOptions}
-       </select>`
+    ? `<select id="recipient-${order.id}" class="recipient-select"><option value="">Empfänger wählen</option>${recipientOptions}</select>`
     : "";
 
   const interestButton = canExpressInterest(order)
     ? hasMyInterest
-      ? `<button class="btn btn-outline" disabled>Interesse bereits bekundet</button>`
-      : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`
+      ? '<button class="btn btn-outline" disabled>Interesse bereits bekundet</button>'
+      : `<button class="btn btn-primary" data-action="interest" data-order-id="${order.id}">Interesse bekunden</button>`
     : own
-      ? `<button class="btn btn-outline" disabled>Eigener Auftrag</button>`
-      : `<button class="btn btn-primary" onclick="expressInterest('${order.id}')">Interesse bekunden</button>`;
+      ? '<button class="btn btn-outline" disabled>Eigener Auftrag</button>'
+      : `<button class="btn btn-primary" data-action="interest" data-order-id="${order.id}">Interesse bekunden</button>`;
 
   const completeButton = order.status === "Vergeben" && canAssignOrder(order)
-      ? `<button class="btn btn-outline" onclick="completeOrder('${order.id}')">Als abgeschlossen markieren</button>`
-      : "";
-
-  const ownerBadge = own ? `<span class="badge owner-badge">Mein Auftrag</span>` : "";
+    ? `<button class="btn btn-outline" data-action="complete" data-order-id="${order.id}">Als abgeschlossen markieren</button>`
+    : "";
+  const ownerBadge = own ? '<span class="badge owner-badge">Mein Auftrag</span>' : '';
 
   return `
   <div class="order">
@@ -1049,7 +1115,7 @@ function orderCard(order){
     </div>
 
     <div class="info-box">
-      <div>Annonciert von: <strong>${escapeText(order.announcer)}</strong></div>
+      <div>Annonciert von: <strong>${escapeText(order.announcer)}</strong> <button class="btn btn-outline" style="padding:6px 10px;margin-left:8px" data-action="profile" data-name="${encodeValue(order.announcer)}">Profil ansehen</button></div>
       <div>Vergebener Partner: <strong>${order.assignedPartner ? escapeText(order.assignedPartner) : "Noch nicht vergeben"}</strong></div>
     </div>
 
@@ -1057,18 +1123,17 @@ function orderCard(order){
 
     <div class="actions">
       ${interestButton}
-      <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
+      <button class="btn btn-outline" data-action="toggleChat" data-order-id="${order.id}">Nachricht öffnen</button>
       ${completeButton}
     </div>
 
     <div class="chat-box" id="chat-${order.id}">
       <div style="font-weight:700;margin-bottom:8px">Nachrichten</div>
       <div class="chat-list" id="messages-${order.id}"></div>
-
       <div class="chat-input-row">
         ${ownerRecipientSelect}
         <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
-        <button class="btn btn-primary" onclick="handleSend('${order.id}')">Senden</button>
+        <button class="btn btn-primary" data-action="send" data-order-id="${order.id}">Senden</button>
       </div>
     </div>
   </div>`;
@@ -1079,28 +1144,25 @@ function applicationCard(order){
   return `
     <div class="application-box">
       <div class="row">
-        <div>
-          <strong>${escapeText(order.title)}</strong><br>
-          <span class="muted tiny">${escapeText(order.city)} · Auftraggeber: ${escapeText(order.announcer)}</span>
-        </div>
+        <div><strong>${escapeText(order.title)}</strong><br><span class="muted tiny">${escapeText(order.city)} · Auftraggeber: ${escapeText(order.announcer)}</span></div>
         <span class="badge ${statusClass(order.status)}">${escapeText(order.status)}</span>
       </div>
       <div style="margin-top:10px">
-        ${isAssignedToMe ? `<span class="badge" style="background:#dcfce7;color:#166534">An dich vergeben</span>` : `<span class="muted">Dein Interesse wurde an den Auftraggeber übermittelt.</span>`}
+        ${isAssignedToMe ? '<span class="badge" style="background:#dcfce7;color:#166534">An dich vergeben</span>' : '<span class="muted">Dein Interesse wurde an den Auftraggeber übermittelt.</span>'}
       </div>
       <div class="actions">
-        <button class="btn btn-outline" onclick="openMessages('${order.id}')">Nachricht öffnen</button>
+        <button class="btn btn-outline" data-action="profile" data-name="${encodeValue(order.announcer)}">Auftraggeber-Profil ansehen</button>
+        <button class="btn btn-outline" data-action="toggleChat" data-order-id="${order.id}">Nachricht öffnen</button>
       </div>
       <div class="chat-box" id="chat-${order.id}">
         <div style="font-weight:700;margin-bottom:8px">Nachrichten</div>
         <div class="chat-list" id="messages-${order.id}"></div>
         <div class="chat-input-row">
           <input id="msgInput-${order.id}" placeholder="Nachricht schreiben..." />
-          <button class="btn btn-primary" onclick="handleSend('${order.id}')">Senden</button>
+          <button class="btn btn-primary" data-action="send" data-order-id="${order.id}">Senden</button>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderOrders(){
@@ -1111,76 +1173,46 @@ function renderOrders(){
   const dashboardMyOrders = document.getElementById("dashboardMyOrders");
   const applicationsList = document.getElementById("applicationsList");
 
-  if(ordersList){
-    ordersList.innerHTML = filtered.map(orderCard).join("") || `<div class="empty-state">Keine Aufträge gefunden.</div>`;
-  }
-
-  if(dashboardOrders){
-    dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || `<div class="empty-state">Keine Aufträge gefunden.</div>`;
-  }
+  if(ordersList) ordersList.innerHTML = filtered.map(orderCard).join("") || '<div class="empty-state">Keine Aufträge gefunden.</div>';
+  if(dashboardOrders) dashboardOrders.innerHTML = filtered.slice(0,2).map(orderCard).join("") || '<div class="empty-state">Keine Aufträge gefunden.</div>';
 
   const own = myOrders();
-  if(myOrdersList){
-    myOrdersList.innerHTML = own.map(orderCard).join("") || `<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>`;
-  }
-
-  if(dashboardMyOrders){
-    dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || `<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>`;
-  }
+  if(myOrdersList) myOrdersList.innerHTML = own.map(orderCard).join("") || '<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>';
+  if(dashboardMyOrders) dashboardMyOrders.innerHTML = own.slice(0,3).map(orderCard).join("") || '<div class="empty-state">Du hast noch keine eigenen Aufträge annonciert.</div>';
 
   const apps = myApplications();
-  if(applicationsList){
-    applicationsList.innerHTML = apps.map(applicationCard).join("") || `<div class="empty-state">Du hast noch keine Interessenbekundungen abgegeben.</div>`;
-  }
+  if(applicationsList) applicationsList.innerHTML = apps.map(applicationCard).join("") || '<div class="empty-state">Du hast noch keine Interessenbekundungen abgegeben.</div>';
 }
 
 function renderCityFilter(){
   const sel = document.getElementById("cityFilter");
   if(!sel) return;
-
   const current = sel.value || "all";
-  const cities = [...new Set(state.orders.map(o=>o.city).filter(Boolean))];
-
-  sel.innerHTML = `<option value="all">Alle Orte</option>` + cities.map(c=>`<option value="${escapeText(c)}">${escapeText(c)}</option>`).join("");
-
-  if([...sel.options].some(o=>o.value === current)){
-    sel.value = current;
-  }
+  const cities = [...new Set(state.orders.map(o => o.city).filter(Boolean))];
+  sel.innerHTML = '<option value="all">Alle Orte</option>' + cities.map(c => `<option value="${escapeText(c)}">${escapeText(c)}</option>`).join("");
+  if([...sel.options].some(o => o.value === current)) sel.value = current;
 }
 
-function activityBadge(type){
-  return `<span class="badge" style="background:#e3f2ff;color:#1f78c8">${escapeText(type)}</span>`;
-}
+function activityBadge(type){ return `<span class="badge" style="background:#e3f2ff;color:#1f78c8">${escapeText(type)}</span>`; }
 
 function renderDashboardActivities(){
   const wrap = document.getElementById("dashboardActivities");
   if(!wrap) return;
 
   const ownInterestedOrders = myOrders().filter(o => (o.interestedPartners || []).length > 0 && !["Vergeben","Abgeschlossen"].includes(o.status));
-
   const notificationHtml = ownInterestedOrders.length ? `
     <div class="timeline-item" style="background:#fff7ed;border-color:#fed7aa">
-      <div class="row">
-        <strong>Neue Interessenten</strong>
-        <span class="badge interest-badge">${ownInterestedOrders.reduce((sum,o)=>sum+(o.interestedPartners||[]).length,0)}</span>
-      </div>
-      <div class="muted" style="margin-top:8px">
-        Für deine Aufträge gibt es Interessenten. Öffne „Meine Aufträge“, um sie zu sehen und direkt anzuschreiben.
-      </div>
-      <button class="btn btn-outline" style="margin-top:10px" onclick="showPage('myOrders')">Meine Aufträge öffnen</button>
-    </div>
-  ` : "";
+      <div class="row"><strong>Neue Interessenten</strong><span class="badge interest-badge">${ownInterestedOrders.reduce((sum,o) => sum + (o.interestedPartners || []).length,0)}</span></div>
+      <div class="muted" style="margin-top:8px">Für deine Aufträge gibt es Interessenten. Öffne „Meine Aufträge“, um sie zu sehen und direkt anzuschreiben.</div>
+      <button class="btn btn-outline" style="margin-top:10px" data-action="page" data-page="myOrders">Meine Aufträge öffnen</button>
+    </div>` : "";
 
   const activityHtml = state.activities.slice(0,5).map(a => `
     <div class="timeline-item">
-      <div class="row">
-        <strong>${escapeText(a.user)}</strong>
-        <span class="muted tiny">${escapeText(a.date)} · ${escapeText(a.time)}</span>
-      </div>
+      <div class="row"><strong>${escapeText(a.user)}</strong><span class="muted tiny">${escapeText(a.date)} · ${escapeText(a.time)}</span></div>
       <div style="margin-top:8px">${activityBadge(a.type)}</div>
       <div class="muted" style="margin-top:10px">${escapeText(a.details)}</div>
-    </div>
-  `).join("");
+    </div>`).join("");
 
   wrap.innerHTML = notificationHtml + activityHtml;
 }
@@ -1203,49 +1235,31 @@ function renderCalendar(){
           <div class="row"><strong>${escapeText(a.time)}</strong>${activityBadge(a.type)}</div>
           <div style="margin-top:10px"><strong>${escapeText(a.user)}</strong></div>
           <div class="muted" style="margin-top:4px">${escapeText(a.details)}</div>
-        </div>
-      `).join("")}
-    </div>
-  `).join("");
+        </div>`).join("")}
+    </div>`).join("");
 }
 
 async function sendChatMessage(orderId, sender, recipient, text){
-  const { error } = await client.from("messages").insert([{
-    sender,
-    recipient,
-    body: text,
-    orderRef: String(orderId)
-  }]);
-
+  const { error } = await client.from("messages").insert([{sender,recipient,body:text,orderRef:String(orderId)}]);
   if(error){
     console.error("Fehler beim Senden:", error);
     alert("Nachricht konnte nicht gespeichert werden.");
     return false;
   }
-
   return true;
 }
 
 async function loadMessages(orderId){
   const name = getChatName();
-
-  let query = client
-    .from("messages")
-    .select("*")
-    .eq("orderRef", String(orderId))
-    .order("created_at", { ascending:true });
-
+  let query = client.from("messages").select("*").eq("orderRef", String(orderId)).order("created_at", { ascending:true });
   if(!isAdmin() && name){
     query = query.or(`sender.eq.${name},recipient.eq.${name},recipient.eq.Auftraggeber`);
   }
-
   const { data, error } = await query;
-
   if(error){
     console.error("Fehler beim Laden:", error);
     return [];
   }
-
   return data || [];
 }
 
@@ -1255,9 +1269,8 @@ async function renderOrderMessages(orderId){
 
   const messages = await loadMessages(orderId);
   const myName = getChatName();
-
   if(!messages.length){
-    container.innerHTML = `<div class="muted">Keine Nachrichten</div>`;
+    container.innerHTML = '<div class="muted">Keine Nachrichten</div>';
     return;
   }
 
@@ -1265,48 +1278,28 @@ async function renderOrderMessages(orderId){
     const isMe = m.sender === myName;
     return `
       <div style="display:flex;justify-content:${isMe ? "flex-end" : "flex-start"};margin-bottom:8px">
-        <div style="
-          max-width:75%;
-          padding:10px 12px;
-          border-radius:14px;
-          background:${isMe ? "#3ba4ff" : "#e5e7eb"};
-          color:${isMe ? "white" : "black"};
-        ">
+        <div style="max-width:75%;padding:10px 12px;border-radius:14px;background:${isMe ? "#3ba4ff" : "#e5e7eb"};color:${isMe ? "white" : "black"};">
           <div style="font-size:12px;opacity:.75">${escapeText(m.sender)}</div>
           <div>${escapeText(m.body)}</div>
-          <div style="font-size:10px;opacity:.65;margin-top:4px;text-align:right">
-            ${m.created_at ? new Date(m.created_at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) : ""}
-          </div>
+          <div style="font-size:10px;opacity:.65;margin-top:4px;text-align:right">${m.created_at ? new Date(m.created_at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) : ""}</div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join("");
-
   container.scrollTop = container.scrollHeight;
 }
 
-function messageInterestedPartner(orderId, partnerName){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
-
+function messageInterestedPartner(orderId, encodedName){
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
+  const partnerName = decodeValue(encodedName);
   replyTargets[orderId] = partnerName;
-
   const chat = document.getElementById("chat-" + orderId);
-  if(chat && chat.style.display !== "block"){
-    openMessages(orderId);
-  } else {
-    renderOrderMessages(orderId);
-  }
+  if(chat && chat.style.display !== "block") openMessages(orderId);
+  else renderOrderMessages(orderId);
 
   setTimeout(() => {
     const select = document.getElementById("recipient-" + orderId);
     const input = document.getElementById("msgInput-" + orderId);
-
-    if(select){
-      select.value = partnerName;
-    }
-
+    if(select) select.value = partnerName;
     if(input){
       input.placeholder = "Nachricht an " + partnerName + " schreiben...";
       input.focus();
@@ -1315,10 +1308,7 @@ function messageInterestedPartner(orderId, partnerName){
 }
 
 function openMessages(orderId){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
-
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
   const chat = document.getElementById("chat-" + orderId);
   if(!chat) return;
 
@@ -1333,40 +1323,30 @@ function openMessages(orderId){
   if(!refreshTimers[orderId]){
     refreshTimers[orderId] = setInterval(() => {
       const openChat = document.getElementById("chat-" + orderId);
-      if(openChat && openChat.style.display === "block"){
-        renderOrderMessages(orderId);
-      }
+      if(openChat && openChat.style.display === "block") renderOrderMessages(orderId);
     }, 3000);
   }
 }
 
 async function handleSend(orderId){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
 
   const input = document.getElementById("msgInput-" + orderId);
   const text = input.value.trim();
   if(!text) return alert("Bitte Nachricht eingeben.");
 
   const name = getChatName();
-  const order = state.orders.find(o=>String(o.id)===String(orderId));
-
+  const order = state.orders.find(o => String(o.id) === String(orderId));
   let sender = name;
   let recipient = order ? order.announcer : "Auftraggeber";
 
-  // Wenn der Auftraggeber schreibt, geht die Nachricht gezielt an den gewählten Interessenten.
   if(order && isOwnOrder(order)){
     const select = document.getElementById("recipient-" + orderId);
     recipient = (select && select.value) || replyTargets[orderId] || "";
-
-    if(!recipient){
-      return alert("Bitte zuerst einen Interessenten als Empfänger auswählen.");
-    }
+    if(!recipient) return alert("Bitte zuerst einen Interessenten als Empfänger auswählen.");
   }
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
-
   if(success){
     input.value = "";
     await renderOrderMessages(orderId);
@@ -1374,37 +1354,19 @@ async function handleSend(orderId){
 }
 
 async function expressInterest(orderId){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
 
-  const order = state.orders.find(o=>String(o.id)===String(orderId));
+  const order = state.orders.find(o => String(o.id) === String(orderId));
   if(!order) return;
-
   const partnerName = getChatName();
 
-  if(isOwnOrder(order)){
-    return alert("Du kannst kein Interesse an deinem eigenen Auftrag bekunden.");
-  }
-
-  if((order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(partnerName))){
-    return alert("Du hast bereits Interesse bekundet.");
-  }
+  if(isOwnOrder(order)) return alert("Du kannst kein Interesse an deinem eigenen Auftrag bekunden.");
+  if((order.interestedPartners || []).some(p => normalizeName(p) === normalizeName(partnerName))) return alert("Du hast bereits Interesse bekundet.");
 
   order.interestedPartners = [...(order.interestedPartners || []), partnerName];
+  if(order.status === "Offen") order.status = "In Verhandlung";
 
-  if(order.status === "Offen"){
-    order.status = "In Verhandlung";
-  }
-
-  const { error } = await client
-    .from("orders")
-    .update({
-      interestedPartners: order.interestedPartners,
-      status: order.status
-    })
-    .eq("id", orderId);
-
+  const { error } = await client.from("orders").update({interestedPartners:order.interestedPartners,status:order.status}).eq("id", orderId);
   if(error){
     console.error("Fehler beim Interesse:", error);
     return alert("Interesse konnte nicht gespeichert werden.");
@@ -1415,22 +1377,13 @@ async function expressInterest(orderId){
   alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
 }
 
-async function assignOrder(orderId, partnerName){
-  const order = state.orders.find(o=>String(o.id)===String(orderId));
+async function assignOrder(orderId, encodedName){
+  const partnerName = decodeValue(encodedName);
+  const order = state.orders.find(o => String(o.id) === String(orderId));
   if(!order) return;
+  if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag vergeben.");
 
-  if(!canAssignOrder(order)){
-    return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag vergeben.");
-  }
-
-  const { error } = await client
-    .from("orders")
-    .update({
-      assignedPartner: partnerName,
-      status: "Vergeben"
-    })
-    .eq("id", orderId);
-
+  const { error } = await client.from("orders").update({assignedPartner:partnerName,status:"Vergeben"}).eq("id", orderId);
   if(error){
     console.error("Fehler bei Vergabe:", error);
     return alert("Auftrag konnte nicht vergeben werden.");
@@ -1442,18 +1395,11 @@ async function assignOrder(orderId, partnerName){
 }
 
 async function completeOrder(orderId){
-  const order = state.orders.find(o=>String(o.id)===String(orderId));
+  const order = state.orders.find(o => String(o.id) === String(orderId));
   if(!order) return;
+  if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag abschließen.");
 
-  if(!canAssignOrder(order)){
-    return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag abschließen.");
-  }
-
-  const { error } = await client
-    .from("orders")
-    .update({ status: "Abgeschlossen" })
-    .eq("id", orderId);
-
+  const { error } = await client.from("orders").update({status:"Abgeschlossen"}).eq("id", orderId);
   if(error){
     console.error("Fehler beim Abschließen:", error);
     return alert("Auftrag konnte nicht abgeschlossen werden.");
@@ -1465,9 +1411,7 @@ async function completeOrder(orderId){
 }
 
 async function createOrder(){
-  if(!isLoggedIn()){
-    return alert("Bitte zuerst registrieren oder einloggen.");
-  }
+  if(!isLoggedIn()) return alert("Bitte zuerst registrieren oder einloggen.");
 
   const title = document.getElementById("newTitle").value.trim();
   const city = document.getElementById("newCity").value.trim();
@@ -1477,9 +1421,7 @@ async function createOrder(){
   const description = document.getElementById("newDescription").value.trim() || "Neuer annoncierter Auftrag.";
   const announcer = document.getElementById("newAnnouncer").value.trim() || getChatName();
 
-  if(!title || !city || !price || !volume || !date){
-    return alert("Bitte alle Pflichtfelder ausfüllen.");
-  }
+  if(!title || !city || !price || !volume || !date) return alert("Bitte alle Pflichtfelder ausfüllen.");
 
   const { error } = await client.from("orders").insert([{
     title,
@@ -1500,12 +1442,10 @@ async function createOrder(){
   }
 
   addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
-
   ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
   });
-
   const announcerEl = document.getElementById("newAnnouncer");
   if(announcerEl) announcerEl.value = getChatName();
 
@@ -1520,14 +1460,9 @@ async function registerPartner(){
   const password = document.getElementById("regPassword").value.trim();
   const role = document.getElementById("regRole").value || "Partner";
 
-  if(!name || !email || !password){
-    return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
-  }
+  if(!name || !email || !password) return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
 
-  const { error } = await client
-    .from("partners")
-    .insert([{ name, email, password, role }]);
-
+  const { error } = await client.from("partners").insert([{name,email,password,role}]);
   if(error){
     console.error("Fehler:", error);
     return alert("Registrierung fehlgeschlagen.");
@@ -1535,15 +1470,12 @@ async function registerPartner(){
 
   localStorage.setItem("chatName", name);
   localStorage.setItem("role", role);
-
   updateNameDisplay();
   addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
-
   ["regName","regEmail","regPassword"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
   });
-
   alert("Registrierung erfolgreich.");
   showPage("dashboard");
 }
@@ -1551,18 +1483,9 @@ async function registerPartner(){
 async function login(){
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
+  if(!email || !password) return alert("Bitte E-Mail und Passwort eingeben.");
 
-  if(!email || !password){
-    return alert("Bitte E-Mail und Passwort eingeben.");
-  }
-
-  const { data, error } = await client
-    .from("partners")
-    .select("*")
-    .eq("email", email)
-    .eq("password", password)
-    .single();
-
+  const { data, error } = await client.from("partners").select("*").eq("email", email).eq("password", password).single();
   if(error || !data){
     console.error("Login Fehler:", error);
     return alert("Login fehlgeschlagen.");
@@ -1570,9 +1493,7 @@ async function login(){
 
   localStorage.setItem("chatName", data.name);
   localStorage.setItem("role", data.role || "Partner");
-
   updateNameDisplay();
-
   alert("Login erfolgreich.");
   showPage("dashboard");
 }
@@ -1586,6 +1507,40 @@ function render(){
   renderDashboardActivities();
   renderCalendar();
 }
+
+document.addEventListener("click", function(event){
+  const btn = event.target.closest("button[data-action]");
+  if(!btn) return;
+
+  const action = btn.dataset.action;
+  const page = btn.dataset.page;
+  const orderId = btn.dataset.orderId;
+  const name = btn.dataset.name;
+
+  if(action === "page") return showPage(page);
+  if(action === "logout") return logout();
+  if(action === "saveProfile") return saveProfile();
+  if(action === "loadProfile") return loadProfileIntoForm();
+  if(action === "createOrder") return createOrder();
+  if(action === "register") return registerPartner();
+  if(action === "login") return login();
+  if(action === "profile") return openCompanyProfile(name);
+  if(action === "closeProfile") return closeCompanyProfile();
+  if(action === "messagePartner") return messageInterestedPartner(orderId, name);
+  if(action === "assign") return assignOrder(orderId, name);
+  if(action === "interest") return expressInterest(orderId);
+  if(action === "toggleChat") return openMessages(orderId);
+  if(action === "send") return handleSend(orderId);
+  if(action === "complete") return completeOrder(orderId);
+});
+
+document.addEventListener("click", function(event){
+  if(event.target && event.target.id === "profileModal") closeCompanyProfile();
+});
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", function(){ showPage(btn.dataset.page); });
+});
 
 document.getElementById("globalSearch").addEventListener("input", render);
 document.getElementById("orderSearch").addEventListener("input", render);
