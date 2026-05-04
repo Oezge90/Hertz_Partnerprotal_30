@@ -483,6 +483,76 @@
 
     .profile-info strong{display:block;margin-bottom:4px}
 
+    .notification-wrap{
+      position:relative;
+      display:flex;
+      align-items:center;
+    }
+
+    .bell-btn{
+      position:relative;
+      width:46px;
+      height:46px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:white;
+      cursor:pointer;
+      font-size:20px;
+      box-shadow:0 8px 18px rgba(37,99,235,.10);
+    }
+
+    .bell-badge{
+      position:absolute;
+      top:-6px;
+      right:-6px;
+      min-width:22px;
+      height:22px;
+      padding:3px 6px;
+      border-radius:999px;
+      background:#ef4444;
+      color:white;
+      font-size:12px;
+      font-weight:800;
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .notification-panel{
+      display:none;
+      position:absolute;
+      top:56px;
+      right:0;
+      width:360px;
+      max-height:440px;
+      overflow:auto;
+      background:white;
+      border:1px solid var(--border);
+      border-radius:22px;
+      box-shadow:0 20px 60px rgba(15,23,42,.18);
+      z-index:1000;
+      padding:14px;
+    }
+
+    .notification-panel.open{display:block}
+
+    .notification-item{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:#f8fbff;
+      margin-bottom:10px;
+    }
+
+    .notification-item.unread{
+      background:#fff7ed;
+      border-color:#fed7aa;
+    }
+
+    .notification-title{font-weight:800;margin-bottom:4px}
+    .notification-body{font-size:13px;color:var(--muted);line-height:1.4}
+    .notification-time{font-size:11px;color:var(--muted);margin-top:6px}
+
     @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}.search{min-width:240px}}
     @media(max-width:640px){.meta,.two-col,.stats,.hero-grid,.profile-grid{grid-template-columns:1fr}.search{min-width:100%}.brand-logo{width:140px}.profile-name{font-size:22px}}
@@ -527,6 +597,16 @@
           <input id="globalSearch" class="search" placeholder="Suche nach Ort, Auftrag, Partner..." />
           <button class="btn btn-primary" data-action="page" data-page="orders">Aufträge finden</button>
           <button class="btn btn-success" data-action="page" data-page="createOrder">Auftrag vergeben</button>
+          <div class="notification-wrap">
+            <button class="bell-btn" data-action="toggleNotifications" title="Benachrichtigungen">🔔<span id="notificationBadge" class="bell-badge"></span></button>
+            <div id="notificationPanel" class="notification-panel">
+              <div class="row" style="margin-bottom:10px">
+                <strong>Benachrichtigungen</strong>
+                <button class="btn btn-outline" style="padding:7px 10px" data-action="markNotificationsRead">Alle gelesen</button>
+              </div>
+              <div id="notificationsList"></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -719,7 +799,8 @@
 let state = {
   orders: [],
   profiles: {},
-  activities: []
+  activities: [],
+  notifications: []
 };
 
 const refreshTimers = {};
@@ -864,7 +945,99 @@ async function loadFromSupabase(){
     }));
   }
 
+  await loadNotifications();
   render();
+}
+
+async function loadNotifications(){
+  if(!isLoggedIn()){
+    state.notifications = [];
+    return;
+  }
+
+  const { data, error } = await client
+    .from("notifications")
+    .select("*")
+    .eq("recipient_name", getChatName())
+    .order("created_at", { ascending:false })
+    .limit(30);
+
+  if(error){
+    console.warn("Benachrichtigungen konnten nicht geladen werden. Falls notifications noch nicht existiert, ist das bis zum SQL-Schritt normal.", error);
+    state.notifications = [];
+    return;
+  }
+
+  state.notifications = data || [];
+}
+
+async function createNotification(recipientName, title, body, orderId){
+  if(!recipientName || normalizeName(recipientName) === normalizeName(getChatName())) return;
+
+  const { error } = await client.from("notifications").insert([{
+    recipient_name: recipientName,
+    title,
+    body,
+    order_id: String(orderId || ""),
+    is_read: false
+  }]);
+
+  if(error){
+    console.warn("Benachrichtigung konnte nicht gespeichert werden:", error);
+  }
+}
+
+function renderNotifications(){
+  const badge = document.getElementById("notificationBadge");
+  const list = document.getElementById("notificationsList");
+  if(!badge || !list) return;
+
+  const unread = state.notifications.filter(n => !n.is_read).length;
+  badge.style.display = unread ? "flex" : "none";
+  badge.innerText = unread;
+
+  if(!isLoggedIn()){
+    list.innerHTML = '<div class="empty-state">Bitte einloggen.</div>';
+    return;
+  }
+
+  if(!state.notifications.length){
+    list.innerHTML = '<div class="empty-state">Keine Benachrichtigungen.</div>';
+    return;
+  }
+
+  list.innerHTML = state.notifications.map(n => `
+    <div class="notification-item ${n.is_read ? '' : 'unread'}">
+      <div class="notification-title">${escapeText(n.title)}</div>
+      <div class="notification-body">${escapeText(n.body)}</div>
+      <div class="notification-time">${n.created_at ? new Date(n.created_at).toLocaleString("de-DE") : ""}</div>
+    </div>
+  `).join("");
+}
+
+function toggleNotifications(){
+  const panel = document.getElementById("notificationPanel");
+  if(panel) panel.classList.toggle("open");
+}
+
+async function markNotificationsRead(){
+  if(!isLoggedIn()) return;
+
+  const unreadIds = state.notifications.filter(n => !n.is_read).map(n => n.id);
+  if(!unreadIds.length) return;
+
+  const { error } = await client
+    .from("notifications")
+    .update({ is_read:true })
+    .in("id", unreadIds);
+
+  if(error){
+    console.warn("Benachrichtigungen konnten nicht markiert werden:", error);
+    return;
+  }
+
+  state.notifications = state.notifications.map(n => ({...n, is_read:true}));
+  renderNotifications();
 }
 
 function showPage(page){
@@ -1408,6 +1581,7 @@ async function handleSend(orderId){
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
   if(success){
+    await createNotification(recipient, "Neue Nachricht", `${sender} hat dir eine Nachricht zum Auftrag '${order ? order.title : ""}' geschrieben.`, orderId);
     input.value = "";
     await renderOrderMessages(orderId);
   }
@@ -1433,6 +1607,7 @@ async function expressInterest(orderId){
   }
 
   await addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`, orderId);
+  await createNotification(order.announcer, "Neuer Interessent", `${partnerName} hat Interesse an deinem Auftrag '${order.title}' bekundet.`, orderId);
   await loadFromSupabase();
   alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
 }
@@ -1450,6 +1625,7 @@ async function assignOrder(orderId, encodedName){
   }
 
   await addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`, orderId);
+  await createNotification(partnerName, "Auftrag vergeben", `Der Auftrag '${order.title}' wurde an dich vergeben.`, orderId);
   await loadFromSupabase();
   alert("Auftrag wurde vergeben.");
 }
@@ -1466,6 +1642,9 @@ async function completeOrder(orderId){
   }
 
   await addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`, orderId);
+  if(order.assignedPartner){
+    await createNotification(order.assignedPartner, "Auftrag abgeschlossen", `Der Auftrag '${order.title}' wurde als abgeschlossen markiert.`, orderId);
+  }
   await loadFromSupabase();
   alert("Auftrag wurde als abgeschlossen markiert.");
 }
@@ -1561,6 +1740,7 @@ async function login(){
 function render(){
   updateNameDisplay();
   updateNavBadges();
+  renderNotifications();
   renderStats();
   renderCityFilter();
   renderOrders();
@@ -1586,6 +1766,8 @@ document.addEventListener("click", function(event){
   if(action === "login") return login();
   if(action === "profile") return openCompanyProfile(name);
   if(action === "closeProfile") return closeCompanyProfile();
+  if(action === "toggleNotifications") return toggleNotifications();
+  if(action === "markNotificationsRead") return markNotificationsRead();
   if(action === "messagePartner") return messageInterestedPartner(orderId, name);
   if(action === "assign") return assignOrder(orderId, name);
   if(action === "interest") return expressInterest(orderId);
