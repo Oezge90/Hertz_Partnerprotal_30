@@ -1007,7 +1007,7 @@ function renderNotifications(){
   }
 
   list.innerHTML = state.notifications.map(n => `
-    <div class="notification-item ${n.is_read ? '' : 'unread'}">
+    <div class="notification-item ${n.is_read ? '' : 'unread'}" data-action="openNotification" data-notification-id="${escapeText(n.id)}" data-order-id="${escapeText(n.order_id || '')}">
       <div class="notification-title">${escapeText(n.title)}</div>
       <div class="notification-body">${escapeText(n.body)}</div>
       <div class="notification-time">${n.created_at ? new Date(n.created_at).toLocaleString("de-DE") : ""}</div>
@@ -1018,6 +1018,44 @@ function renderNotifications(){
 function toggleNotifications(){
   const panel = document.getElementById("notificationPanel");
   if(panel) panel.classList.toggle("open");
+}
+
+function closeNotifications(){
+  const panel = document.getElementById("notificationPanel");
+  if(panel) panel.classList.remove("open");
+}
+
+async function openNotification(notificationId, orderId){
+  if(notificationId){
+    const { error } = await client
+      .from("notifications")
+      .update({ is_read:true })
+      .eq("id", notificationId);
+
+    if(error){
+      console.warn("Benachrichtigung konnte nicht als gelesen markiert werden:", error);
+    }
+  }
+
+  closeNotifications();
+  await loadNotifications();
+  renderNotifications();
+
+  if(orderId){
+    showPage("orders");
+    setTimeout(() => {
+      const el = document.getElementById("order-" + orderId);
+      if(el){
+        el.scrollIntoView({ behavior:"smooth", block:"center" });
+        el.style.outline = "3px solid #f97316";
+        el.style.boxShadow = "0 0 0 8px rgba(249,115,22,.14)";
+        setTimeout(() => {
+          el.style.outline = "";
+          el.style.boxShadow = "";
+        }, 2600);
+      }
+    }, 250);
+  }
 }
 
 async function markNotificationsRead(){
@@ -1309,7 +1347,7 @@ function orderCard(order){
   const ownerBadge = own ? '<span class="badge owner-badge">Mein Auftrag</span>' : '';
 
   return `
-  <div class="order">
+  <div class="order" id="order-${order.id}">
     <div class="row">
       <div>
         <div style="font-size:18px;font-weight:700">${escapeText(order.title)}</div>
@@ -1768,6 +1806,7 @@ document.addEventListener("click", function(event){
   if(action === "closeProfile") return closeCompanyProfile();
   if(action === "toggleNotifications") return toggleNotifications();
   if(action === "markNotificationsRead") return markNotificationsRead();
+  if(action === "openNotification") return openNotification(btn.dataset.notificationId, btn.dataset.orderId);
   if(action === "messagePartner") return messageInterestedPartner(orderId, name);
   if(action === "assign") return assignOrder(orderId, name);
   if(action === "interest") return expressInterest(orderId);
@@ -1778,6 +1817,15 @@ document.addEventListener("click", function(event){
 
 document.addEventListener("click", function(event){
   if(event.target && event.target.id === "profileModal") closeCompanyProfile();
+});
+
+document.addEventListener("click", function(event){
+  const panel = document.getElementById("notificationPanel");
+  const bell = document.querySelector(".bell-btn");
+  if(!panel || !bell) return;
+  if(!panel.contains(event.target) && !bell.contains(event.target)){
+    closeNotifications();
+  }
 });
 
 document.querySelectorAll(".nav-btn").forEach(btn => {
