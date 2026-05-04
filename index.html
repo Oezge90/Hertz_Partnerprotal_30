@@ -719,11 +719,7 @@
 let state = {
   orders: [],
   profiles: {},
-  activities: [
-    {id:1,date:"2026-04-23",time:"08:30",type:"Registrierung",user:"Baran Alagöz",details:"Neuer Partner registriert und Profil vervollständigt."},
-    {id:2,date:"2026-04-23",time:"10:15",type:"Auftrag annonciert",user:"Heinrich Hertz Elektrotechnik GmbH",details:"Neuer Auftrag in Hamburg veröffentlicht."},
-    {id:3,date:"2026-04-24",time:"11:40",type:"Interesse bekundet",user:"Nordlicht Prüfservice",details:"Partner hat Interesse an einem Auftrag in Hamburg bekundet."}
-  ]
+  activities: []
 };
 
 const refreshTimers = {};
@@ -780,8 +776,33 @@ function todayDate(){
   return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 }
 
-function addActivity(type,user,details){
-  state.activities.unshift({id:Date.now(),date:todayDate(),time:nowTime(),type,user,details});
+async function addActivity(type,user,details,orderId){
+  const activity = {
+    id:Date.now(),
+    date:todayDate(),
+    time:nowTime(),
+    type,
+    user,
+    details,
+    order_id: orderId || ""
+  };
+
+  state.activities.unshift(activity);
+  renderDashboardActivities();
+  renderCalendar();
+
+  const { error } = await client.from("activities").insert([{
+    activity_date: activity.date,
+    activity_time: activity.time,
+    type: activity.type,
+    user_name: activity.user,
+    details: activity.details,
+    order_id: String(activity.order_id || "")
+  }]);
+
+  if(error){
+    console.warn("Aktivität konnte nicht dauerhaft gespeichert werden:", error);
+  }
 }
 
 async function loadFromSupabase(){
@@ -821,6 +842,26 @@ async function loadFromSupabase(){
     (profilesData || []).forEach(profile => {
       state.profiles[normalizeName(profile.owner_name)] = profile;
     });
+  }
+
+  const { data: activitiesData, error: activitiesError } = await client
+    .from("activities")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(activitiesError){
+    console.warn("Aktivitäten konnten nicht geladen werden. Falls activities noch nicht existiert, ist das bis zum SQL-Schritt normal.", activitiesError);
+    state.activities = [];
+  } else {
+    state.activities = (activitiesData || []).map(a => ({
+      id: a.id,
+      date: a.activity_date || "",
+      time: a.activity_time || "",
+      type: a.type || "Aktivität",
+      user: a.user_name || "System",
+      details: a.details || "",
+      order_id: a.order_id || ""
+    }));
   }
 
   render();
@@ -1221,18 +1262,37 @@ function renderCalendar(){
   const wrap = document.getElementById("calendarWrap");
   if(!wrap) return;
 
+  if(!state.activities.length){
+    wrap.innerHTML = '<div class="card"><h2 style="margin-top:0">Admin-Kalender</h2><div class="empty-state">Noch keine Aktivitäten gespeichert.</div></div>';
+    return;
+  }
+
   const grouped = {};
   state.activities.forEach(a => {
-    if(!grouped[a.date]) grouped[a.date] = [];
-    grouped[a.date].push(a);
+    const date = a.date || "Ohne Datum";
+    if(!grouped[date]) grouped[date] = [];
+    grouped[date].push(a);
   });
 
-  wrap.innerHTML = Object.keys(grouped).sort().reverse().map(date => `
+  wrap.innerHTML = `
+    <div class="card" style="margin-bottom:18px">
+      <div class="row">
+        <div>
+          <h2 style="margin:0 0 6px">Admin-Kalender</h2>
+          <div class="muted">Dauerhaft gespeicherte Plattform-Aktivitäten aus Supabase.</div>
+        </div>
+        <span class="badge interest-badge">${state.activities.length} Aktivitäten</span>
+      </div>
+    </div>
+  ` + Object.keys(grouped).sort().reverse().map(date => `
     <div class="card" style="margin-bottom:18px">
       <h2 style="margin-top:0">${escapeText(date)}</h2>
       ${grouped[date].map(a => `
         <div class="timeline-item">
-          <div class="row"><strong>${escapeText(a.time)}</strong>${activityBadge(a.type)}</div>
+          <div class="row">
+            <strong>${escapeText(a.time || "")}</strong>
+            ${activityBadge(a.type)}
+          </div>
           <div style="margin-top:10px"><strong>${escapeText(a.user)}</strong></div>
           <div class="muted" style="margin-top:4px">${escapeText(a.details)}</div>
         </div>`).join("")}
@@ -1372,7 +1432,7 @@ async function expressInterest(orderId){
     return alert("Interesse konnte nicht gespeichert werden.");
   }
 
-  addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`);
+  await addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`, orderId);
   await loadFromSupabase();
   alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
 }
@@ -1389,7 +1449,7 @@ async function assignOrder(orderId, encodedName){
     return alert("Auftrag konnte nicht vergeben werden.");
   }
 
-  addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`);
+  await addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`, orderId);
   await loadFromSupabase();
   alert("Auftrag wurde vergeben.");
 }
@@ -1405,7 +1465,7 @@ async function completeOrder(orderId){
     return alert("Auftrag konnte nicht abgeschlossen werden.");
   }
 
-  addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`);
+  await addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`, orderId);
   await loadFromSupabase();
   alert("Auftrag wurde als abgeschlossen markiert.");
 }
@@ -1441,7 +1501,7 @@ async function createOrder(){
     return alert("Fehler beim Speichern.");
   }
 
-  addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
+  await addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
   ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
@@ -1471,7 +1531,7 @@ async function registerPartner(){
   localStorage.setItem("chatName", name);
   localStorage.setItem("role", role);
   updateNameDisplay();
-  addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
+  await addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
   ["regName","regEmail","regPassword"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
