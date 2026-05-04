@@ -553,6 +553,26 @@
     .notification-body{font-size:13px;color:var(--muted);line-height:1.4}
     .notification-time{font-size:11px;color:var(--muted);margin-top:6px}
 
+    .highlight-order{
+      outline:3px solid #f97316 !important;
+      box-shadow:0 0 0 8px rgba(249,115,22,.14) !important;
+    }
+
+    .status-chip{
+      display:inline-block;
+      margin-top:5px;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      background:#eef2ff;
+      color:#3730a3;
+    }
+
+    .status-chip.accepted{background:#dcfce7;color:#166534}
+    .status-chip.rejected{background:#fee2e2;color:#991b1b}
+    .status-chip.pending{background:#fff7ed;color:#c2410c}
+
     @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}.search{min-width:240px}}
     @media(max-width:640px){.meta,.two-col,.stats,.hero-grid,.profile-grid{grid-template-columns:1fr}.search{min-width:100%}.brand-logo{width:140px}.profile-name{font-size:22px}}
@@ -736,6 +756,29 @@
     </section>
 
     <section id="page-admin" class="page hidden">
+      <div class="card" style="margin-bottom:18px">
+        <div class="row">
+          <div>
+            <h2 style="margin:0 0 6px">Admin-Kalender</h2>
+            <div class="muted">Filterbare Übersicht aller dauerhaft gespeicherten Aktivitäten.</div>
+          </div>
+        </div>
+        <div class="two-col" style="margin-top:14px">
+          <input id="adminFilterSearch" placeholder="Suche nach Nutzer, Auftrag, Details...">
+          <select id="adminFilterType">
+            <option value="all">Alle Aktivitätstypen</option>
+            <option value="Registrierung">Registrierung</option>
+            <option value="Auftrag annonciert">Auftrag annonciert</option>
+            <option value="Interesse bekundet">Interesse bekundet</option>
+            <option value="Bewerbung angenommen">Bewerbung angenommen</option>
+            <option value="Bewerbung abgelehnt">Bewerbung abgelehnt</option>
+            <option value="Vergabe">Vergabe</option>
+            <option value="Statusänderung">Statusänderung</option>
+            <option value="Auftrag bearbeitet">Auftrag bearbeitet</option>
+            <option value="Auftrag gelöscht">Auftrag gelöscht</option>
+          </select>
+        </div>
+      </div>
       <div id="calendarWrap"></div>
     </section>
 
@@ -907,7 +950,8 @@ async function loadFromSupabase(){
       status: order.status || "Offen",
       description: order.description || "Keine Beschreibung vorhanden.",
       interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
-      assignedPartner: order.assignedPartner || ""
+      assignedPartner: order.assignedPartner || "",
+      applicationStatuses: order.applicationStatuses || {}
     }));
   }
 
@@ -1042,19 +1086,25 @@ async function openNotification(notificationId, orderId){
   renderNotifications();
 
   if(orderId){
+    const global = document.getElementById("globalSearch");
+    const search = document.getElementById("orderSearch");
+    const city = document.getElementById("cityFilter");
+    if(global) global.value = "";
+    if(search) search.value = "";
+    if(city) city.value = "all";
+
     showPage("orders");
+    renderOrders();
     setTimeout(() => {
       const el = document.getElementById("order-" + orderId);
       if(el){
         el.scrollIntoView({ behavior:"smooth", block:"center" });
-        el.style.outline = "3px solid #f97316";
-        el.style.boxShadow = "0 0 0 8px rgba(249,115,22,.14)";
-        setTimeout(() => {
-          el.style.outline = "";
-          el.style.boxShadow = "";
-        }, 2600);
+        el.classList.add("highlight-order");
+        setTimeout(() => el.classList.remove("highlight-order"), 3000);
+      } else {
+        alert("Der Auftrag wurde geöffnet, konnte aber nicht automatisch markiert werden. Möglicherweise wurde er gelöscht.");
       }
-    }, 250);
+    }, 350);
   }
 }
 
@@ -1284,11 +1334,23 @@ function getFilteredOrders(){
   });
 }
 
+function applicationStatus(order, partner){
+  const statuses = order.applicationStatuses || {};
+  return statuses[partner] || statuses[normalizeName(partner)] || "Offen";
+}
+
+function applicationStatusHtml(status){
+  const normalized = normalizeName(status);
+  if(normalized === "angenommen") return '<span class="status-chip accepted">Angenommen</span>';
+  if(normalized === "abgelehnt") return '<span class="status-chip rejected">Abgelehnt</span>';
+  return '<span class="status-chip pending">Offen</span>';
+}
+
 function interestedPartnersHtml(order){
   const partners = order.interestedPartners || [];
   const ownerOrAdmin = canAssignOrder(order);
   const currentUserHasInterest = partners.some(p => normalizeName(p) === normalizeName(getChatName()));
-  const ownerCanAssign = ownerOrAdmin && !["Vergeben","Abgeschlossen"].includes(order.status);
+  const ownerCanManage = ownerOrAdmin && !["Vergeben","Abgeschlossen"].includes(order.status);
 
   if(ownerOrAdmin){
     if(!partners.length){
@@ -1301,19 +1363,25 @@ function interestedPartnersHtml(order){
           <strong>Interessenten (${partners.length})</strong>
           ${isOwnOrder(order) ? '<span class="badge interest-badge">Neue Bewerbungen sichtbar</span>' : ''}
         </div>
-        ${partners.map(partner => `
+        ${partners.map(partner => {
+          const status = applicationStatus(order, partner);
+          const isRejected = normalizeName(status) === "abgelehnt";
+          return `
           <div class="interest-row">
             <div>
               <strong>${escapeText(partner)}</strong><br>
-              <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span>
+              <span class="muted tiny">hat Interesse an diesem Auftrag bekundet</span><br>
+              ${applicationStatusHtml(status)}
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-outline" data-action="profile" data-name="${encodeValue(partner)}">Profil ansehen</button>
               <button class="btn btn-outline" data-action="messagePartner" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Nachricht schreiben</button>
-              ${ownerCanAssign ? `<button class="btn btn-success" data-action="assign" data-order-id="${order.id}" data-name="${encodeValue(partner)}">An diesen Partner vergeben</button>` : ''}
+              ${ownerCanManage && !isRejected ? `<button class="btn btn-outline" data-action="acceptApplication" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Bewerbung annehmen</button>` : ''}
+              ${ownerCanManage && !isRejected ? `<button class="btn btn-danger" data-action="rejectApplication" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Ablehnen</button>` : ''}
+              ${ownerCanManage && !isRejected ? `<button class="btn btn-success" data-action="assign" data-order-id="${order.id}" data-name="${encodeValue(partner)}">An diesen Partner vergeben</button>` : ''}
             </div>
-          </div>
-        `).join("")}
+          </div>`;
+        }).join("")}
       </div>`;
   }
 
@@ -1343,6 +1411,9 @@ function orderCard(order){
 
   const completeButton = order.status === "Vergeben" && canAssignOrder(order)
     ? `<button class="btn btn-outline" data-action="complete" data-order-id="${order.id}">Als abgeschlossen markieren</button>`
+    : "";
+  const manageButtons = canAssignOrder(order)
+    ? `<button class="btn btn-outline" data-action="editOrder" data-order-id="${order.id}">Auftrag bearbeiten</button><button class="btn btn-danger" data-action="deleteOrder" data-order-id="${order.id}">Auftrag löschen</button>`
     : "";
   const ownerBadge = own ? '<span class="badge owner-badge">Mein Auftrag</span>' : '';
 
@@ -1377,6 +1448,7 @@ function orderCard(order){
       ${interestButton}
       <button class="btn btn-outline" data-action="toggleChat" data-order-id="${order.id}">Nachricht öffnen</button>
       ${completeButton}
+      ${manageButtons}
     </div>
 
     <div class="chat-box" id="chat-${order.id}">
@@ -1469,17 +1541,28 @@ function renderDashboardActivities(){
   wrap.innerHTML = notificationHtml + activityHtml;
 }
 
+function filteredActivities(){
+  const search = (document.getElementById("adminFilterSearch")?.value || "").toLowerCase();
+  const type = document.getElementById("adminFilterType")?.value || "all";
+
+  return state.activities.filter(a => {
+    const hay = [a.date,a.time,a.type,a.user,a.details,a.order_id].join(" ").toLowerCase();
+    return (!search || hay.includes(search)) && (type === "all" || a.type === type);
+  });
+}
+
 function renderCalendar(){
   const wrap = document.getElementById("calendarWrap");
   if(!wrap) return;
 
-  if(!state.activities.length){
-    wrap.innerHTML = '<div class="card"><h2 style="margin-top:0">Admin-Kalender</h2><div class="empty-state">Noch keine Aktivitäten gespeichert.</div></div>';
+  const activities = filteredActivities();
+  if(!activities.length){
+    wrap.innerHTML = '<div class="card"><div class="empty-state">Keine passenden Aktivitäten gefunden.</div></div>';
     return;
   }
 
   const grouped = {};
-  state.activities.forEach(a => {
+  activities.forEach(a => {
     const date = a.date || "Ohne Datum";
     if(!grouped[date]) grouped[date] = [];
     grouped[date].push(a);
@@ -1489,10 +1572,10 @@ function renderCalendar(){
     <div class="card" style="margin-bottom:18px">
       <div class="row">
         <div>
-          <h2 style="margin:0 0 6px">Admin-Kalender</h2>
-          <div class="muted">Dauerhaft gespeicherte Plattform-Aktivitäten aus Supabase.</div>
+          <h2 style="margin:0 0 6px">Aktivitäten</h2>
+          <div class="muted">Gefilterte Plattform-Aktivitäten aus Supabase.</div>
         </div>
-        <span class="badge interest-badge">${state.activities.length} Aktivitäten</span>
+        <span class="badge interest-badge">${activities.length} Aktivitäten</span>
       </div>
     </div>
   ` + Object.keys(grouped).sort().reverse().map(date => `
@@ -1650,6 +1733,93 @@ async function expressInterest(orderId){
   alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
 }
 
+async function setApplicationStatus(orderId, encodedName, status){
+  const partnerName = decodeValue(encodedName);
+  const order = state.orders.find(o => String(o.id) === String(orderId));
+  if(!order) return;
+  if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf Bewerbungen verwalten.");
+
+  const statuses = {...(order.applicationStatuses || {})};
+  statuses[partnerName] = status;
+
+  const { error } = await client
+    .from("orders")
+    .update({ applicationStatuses: statuses })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Bewerbungsstatus konnte nicht gespeichert werden:", error);
+    return alert("Bewerbungsstatus konnte nicht gespeichert werden. Bitte prüfe den SQL-Schritt applicationStatuses.");
+  }
+
+  const activityType = status === "Angenommen" ? "Bewerbung angenommen" : "Bewerbung abgelehnt";
+  await addActivity(activityType, order.announcer, `${partnerName} wurde für den Auftrag '${order.title}' ${status.toLowerCase()}.`, orderId);
+  await createNotification(partnerName, activityType, `Deine Bewerbung für '${order.title}' wurde ${status.toLowerCase()}.`, orderId);
+  await loadFromSupabase();
+  alert("Bewerbungsstatus aktualisiert.");
+}
+
+async function editOrder(orderId){
+  const order = state.orders.find(o => String(o.id) === String(orderId));
+  if(!order) return;
+  if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag bearbeiten.");
+
+  const title = prompt("Auftragstitel:", order.title);
+  if(title === null) return;
+  const city = prompt("Ort:", order.city);
+  if(city === null) return;
+  const price = prompt("Preis:", order.price);
+  if(price === null) return;
+  const volume = prompt("Auftragsvolumen:", order.volume);
+  if(volume === null) return;
+  const date = prompt("Datum im Format JJJJ-MM-TT:", order.date);
+  if(date === null) return;
+  const description = prompt("Beschreibung:", order.description);
+  if(description === null) return;
+
+  const { error } = await client
+    .from("orders")
+    .update({
+      title:title.trim() || order.title,
+      city:city.trim() || order.city,
+      price:Number(String(price).replace(",", ".")) || order.price,
+      volume:volume.trim() || order.volume,
+      date:date.trim() || order.date,
+      description:description.trim() || order.description
+    })
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Auftrag konnte nicht bearbeitet werden:", error);
+    return alert("Auftrag konnte nicht bearbeitet werden.");
+  }
+
+  await addActivity("Auftrag bearbeitet", getChatName(), `Auftrag '${order.title}' wurde bearbeitet.`, orderId);
+  await loadFromSupabase();
+  alert("Auftrag aktualisiert.");
+}
+
+async function deleteOrder(orderId){
+  const order = state.orders.find(o => String(o.id) === String(orderId));
+  if(!order) return;
+  if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag löschen.");
+  if(!confirm(`Auftrag '${order.title}' wirklich löschen?`)) return;
+
+  const { error } = await client
+    .from("orders")
+    .delete()
+    .eq("id", orderId);
+
+  if(error){
+    console.error("Auftrag konnte nicht gelöscht werden:", error);
+    return alert("Auftrag konnte nicht gelöscht werden.");
+  }
+
+  await addActivity("Auftrag gelöscht", getChatName(), `Auftrag '${order.title}' wurde gelöscht.`, orderId);
+  await loadFromSupabase();
+  alert("Auftrag gelöscht.");
+}
+
 async function assignOrder(orderId, encodedName){
   const partnerName = decodeValue(encodedName);
   const order = state.orders.find(o => String(o.id) === String(orderId));
@@ -1710,7 +1880,8 @@ async function createOrder(){
     status:"Offen",
     description,
     interestedPartners:[],
-    assignedPartner:""
+    assignedPartner:"",
+    applicationStatuses:{}
   }]);
 
   if(error){
@@ -1813,6 +1984,10 @@ document.addEventListener("click", function(event){
   if(action === "toggleChat") return openMessages(orderId);
   if(action === "send") return handleSend(orderId);
   if(action === "complete") return completeOrder(orderId);
+  if(action === "acceptApplication") return setApplicationStatus(orderId, name, "Angenommen");
+  if(action === "rejectApplication") return setApplicationStatus(orderId, name, "Abgelehnt");
+  if(action === "editOrder") return editOrder(orderId);
+  if(action === "deleteOrder") return deleteOrder(orderId);
 });
 
 document.addEventListener("click", function(event){
@@ -1835,6 +2010,10 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 document.getElementById("globalSearch").addEventListener("input", render);
 document.getElementById("orderSearch").addEventListener("input", render);
 document.getElementById("cityFilter").addEventListener("change", render);
+const adminSearch = document.getElementById("adminFilterSearch");
+const adminType = document.getElementById("adminFilterType");
+if(adminSearch) adminSearch.addEventListener("input", renderCalendar);
+if(adminType) adminType.addEventListener("change", renderCalendar);
 
 updateNameDisplay();
 loadFromSupabase();
