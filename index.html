@@ -962,7 +962,15 @@ async function loadUser(){
   return user;
 }
 
-function isOwnOrder(order){ return !!order && normalizeName(order.announcer) === normalizeName(getChatName()); }
+function isOwnOrder(order){
+  if(!order) return false;
+
+  if(order.announcer_id && getUserId()){
+    return String(order.announcer_id) === String(getUserId());
+  }
+
+  return normalizeName(order.announcer) === normalizeName(getChatName());
+}
 function canExpressInterest(order){ return isLoggedIn() && !!order && !isOwnOrder(order); }
 function canAssignOrder(order){ return isLoggedIn() && (isAdmin() || isOwnOrder(order)); }
 function encodeValue(value){ return encodeURIComponent(String(value || "")); }
@@ -1048,6 +1056,7 @@ function mapOrder(order){
     volume: order.volume || "Nicht angegeben",
     date: order.date || "",
     announcer: order.announcer || "Unbekannt",
+    announcer_id: order.announcer_id || "",
     status: order.status || "Offen",
     description: order.description || "Keine Beschreibung vorhanden.",
     interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
@@ -2054,6 +2063,7 @@ async function createOrder(){
     volume,
     date,
     announcer,
+    announcer_id:getUserId(),
     status:"Offen",
     description,
     interestedPartners:[],
