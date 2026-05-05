@@ -542,7 +542,10 @@
       border:1px solid var(--border);
       background:#f8fbff;
       margin-bottom:10px;
+      cursor:pointer;
     }
+
+    .notification-item:hover{background:#eef7ff}
 
     .notification-item.unread{
       background:#fff7ed;
@@ -573,9 +576,33 @@
     .status-chip.rejected{background:#fee2e2;color:#991b1b}
     .status-chip.pending{background:#fff7ed;color:#c2410c}
 
+    .edit-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.48);
+      z-index:9998;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+
+    .edit-modal.open{display:flex}
+
+    .edit-card{
+      width:min(760px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:white;
+      border-radius:28px;
+      border:1px solid var(--border);
+      box-shadow:0 25px 80px rgba(15,23,42,.28);
+      padding:24px;
+    }
+
     @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}}
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.meta,.two-col,.stats{grid-template-columns:1fr 1fr}.search{min-width:240px}}
-    @media(max-width:640px){.meta,.two-col,.stats,.hero-grid,.profile-grid{grid-template-columns:1fr}.search{min-width:100%}.brand-logo{width:140px}.profile-name{font-size:22px}}
+    @media(max-width:640px){.meta,.two-col,.stats,.hero-grid,.profile-grid{grid-template-columns:1fr}.search{min-width:100%}.brand-logo{width:140px}.profile-name{font-size:22px}.notification-panel{width:calc(100vw - 44px);right:-10px}}
   </style>
 </head>
 
@@ -691,7 +718,7 @@
     <section id="page-myOrders" class="page hidden">
       <div class="card">
         <h2 style="margin-top:0">Meine Aufträge</h2>
-        <div class="muted" style="margin-bottom:14px">Alle von dir annoncierten Aufträge inklusive Interessentenliste und Vergabe-Buttons.</div>
+        <div class="muted" style="margin-bottom:14px">Alle von dir annoncierten Aufträge inklusive Interessentenliste, Bearbeitung, Löschung und Vergabe-Buttons.</div>
         <div id="myOrdersList"></div>
       </div>
     </section>
@@ -699,7 +726,7 @@
     <section id="page-applications" class="page hidden">
       <div class="card">
         <h2 style="margin-top:0">Meine Bewerbungen</h2>
-        <div class="muted" style="margin-bottom:14px">Behalte im Blick, wo du dich beworben hast und ob ein Auftrag bereits an dich vergeben wurde.</div>
+        <div class="muted" style="margin-bottom:14px">Hier siehst du deine Bewerbungen inklusive Status: offen, angenommen oder abgelehnt.</div>
         <div id="applicationsList"></div>
       </div>
     </section>
@@ -776,6 +803,7 @@
             <option value="Statusänderung">Statusänderung</option>
             <option value="Auftrag bearbeitet">Auftrag bearbeitet</option>
             <option value="Auftrag gelöscht">Auftrag gelöscht</option>
+            <option value="Nachricht">Nachricht</option>
           </select>
         </div>
       </div>
@@ -838,6 +866,40 @@
   </div>
 </div>
 
+<div id="editOrderModal" class="edit-modal">
+  <div class="edit-card">
+    <div class="row" style="margin-bottom:14px">
+      <div>
+        <h2 style="margin:0">Auftrag bearbeiten</h2>
+        <div class="muted">Änderungen werden direkt in Supabase gespeichert.</div>
+      </div>
+      <button class="btn btn-outline" data-action="closeEditOrder">Schließen</button>
+    </div>
+
+    <input id="editOrderId" type="hidden">
+    <div class="two-col">
+      <input id="editTitle" placeholder="Auftragstitel">
+      <input id="editCity" placeholder="Ausführungsort">
+      <input id="editPrice" placeholder="Preis in Euro">
+      <input id="editVolume" placeholder="Auftragsvolumen">
+      <input id="editDate" type="date">
+      <select id="editStatus">
+        <option value="Offen">Offen</option>
+        <option value="In Verhandlung">In Verhandlung</option>
+        <option value="Vergeben">Vergeben</option>
+        <option value="Abgeschlossen">Abgeschlossen</option>
+      </select>
+    </div>
+    <div style="margin-top:14px">
+      <textarea id="editDescription" placeholder="Beschreibung"></textarea>
+    </div>
+    <div class="actions">
+      <button class="btn btn-success" data-action="saveEditedOrder">Änderungen speichern</button>
+      <button class="btn btn-outline" data-action="closeEditOrder">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let state = {
   orders: [],
@@ -861,7 +923,7 @@ function encodeValue(value){ return encodeURIComponent(String(value || "")); }
 function decodeValue(value){ return decodeURIComponent(String(value || "")); }
 
 function escapeText(value){
-  return String(value || "")
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -929,6 +991,23 @@ async function addActivity(type,user,details,orderId){
   }
 }
 
+function mapOrder(order){
+  return {
+    id: order.id,
+    title: order.title || "Ohne Titel",
+    city: order.city || "Ohne Ort",
+    price: order.price || 0,
+    volume: order.volume || "Nicht angegeben",
+    date: order.date || "",
+    announcer: order.announcer || "Unbekannt",
+    status: order.status || "Offen",
+    description: order.description || "Keine Beschreibung vorhanden.",
+    interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
+    assignedPartner: order.assignedPartner || "",
+    applicationStatuses: order.applicationStatuses && typeof order.applicationStatuses === "object" ? order.applicationStatuses : {}
+  };
+}
+
 async function loadFromSupabase(){
   const { data, error } = await client
     .from("orders")
@@ -939,20 +1018,7 @@ async function loadFromSupabase(){
     console.error("Fehler beim Laden der Aufträge:", error);
     state.orders = [];
   } else {
-    state.orders = (data || []).map(order => ({
-      id: order.id,
-      title: order.title || "Ohne Titel",
-      city: order.city || "Ohne Ort",
-      price: order.price || 0,
-      volume: order.volume || "Nicht angegeben",
-      date: order.date || "",
-      announcer: order.announcer || "Unbekannt",
-      status: order.status || "Offen",
-      description: order.description || "Keine Beschreibung vorhanden.",
-      interestedPartners: Array.isArray(order.interestedPartners) ? order.interestedPartners : [],
-      assignedPartner: order.assignedPartner || "",
-      applicationStatuses: order.applicationStatuses || {}
-    }));
+    state.orders = (data || []).map(mapOrder);
   }
 
   const { data: profilesData, error: profilesError } = await client
@@ -1004,7 +1070,7 @@ async function loadNotifications(){
     .select("*")
     .eq("recipient_name", getChatName())
     .order("created_at", { ascending:false })
-    .limit(30);
+    .limit(50);
 
   if(error){
     console.warn("Benachrichtigungen konnten nicht geladen werden. Falls notifications noch nicht existiert, ist das bis zum SQL-Schritt normal.", error);
@@ -1069,6 +1135,36 @@ function closeNotifications(){
   if(panel) panel.classList.remove("open");
 }
 
+function openOrderAndHighlight(orderId){
+  if(!orderId) return;
+
+  const global = document.getElementById("globalSearch");
+  const search = document.getElementById("orderSearch");
+  const city = document.getElementById("cityFilter");
+
+  if(global) global.value = "";
+  if(search) search.value = "";
+  if(city) city.value = "all";
+
+  showPage("orders");
+  renderOrders();
+
+  setTimeout(() => {
+    const el = document.getElementById("order-" + orderId);
+    if(!el){
+      alert("Der Auftrag konnte nicht gefunden werden. Möglicherweise wurde er gelöscht.");
+      return;
+    }
+
+    el.scrollIntoView({ behavior:"smooth", block:"center" });
+    el.classList.add("highlight-order");
+
+    setTimeout(() => {
+      el.classList.remove("highlight-order");
+    }, 3500);
+  }, 300);
+}
+
 async function openNotification(notificationId, orderId){
   if(notificationId){
     const { error } = await client
@@ -1086,25 +1182,7 @@ async function openNotification(notificationId, orderId){
   renderNotifications();
 
   if(orderId){
-    const global = document.getElementById("globalSearch");
-    const search = document.getElementById("orderSearch");
-    const city = document.getElementById("cityFilter");
-    if(global) global.value = "";
-    if(search) search.value = "";
-    if(city) city.value = "all";
-
-    showPage("orders");
-    renderOrders();
-    setTimeout(() => {
-      const el = document.getElementById("order-" + orderId);
-      if(el){
-        el.scrollIntoView({ behavior:"smooth", block:"center" });
-        el.classList.add("highlight-order");
-        setTimeout(() => el.classList.remove("highlight-order"), 3000);
-      } else {
-        alert("Der Auftrag wurde geöffnet, konnte aber nicht automatisch markiert werden. Möglicherweise wurde er gelöscht.");
-      }
-    }, 350);
+    openOrderAndHighlight(orderId);
   }
 }
 
@@ -1366,6 +1444,7 @@ function interestedPartnersHtml(order){
         ${partners.map(partner => {
           const status = applicationStatus(order, partner);
           const isRejected = normalizeName(status) === "abgelehnt";
+          const isAccepted = normalizeName(status) === "angenommen";
           return `
           <div class="interest-row">
             <div>
@@ -1376,7 +1455,7 @@ function interestedPartnersHtml(order){
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-outline" data-action="profile" data-name="${encodeValue(partner)}">Profil ansehen</button>
               <button class="btn btn-outline" data-action="messagePartner" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Nachricht schreiben</button>
-              ${ownerCanManage && !isRejected ? `<button class="btn btn-outline" data-action="acceptApplication" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Bewerbung annehmen</button>` : ''}
+              ${ownerCanManage && !isAccepted ? `<button class="btn btn-outline" data-action="acceptApplication" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Bewerbung annehmen</button>` : ''}
               ${ownerCanManage && !isRejected ? `<button class="btn btn-danger" data-action="rejectApplication" data-order-id="${order.id}" data-name="${encodeValue(partner)}">Ablehnen</button>` : ''}
               ${ownerCanManage && !isRejected ? `<button class="btn btn-success" data-action="assign" data-order-id="${order.id}" data-name="${encodeValue(partner)}">An diesen Partner vergeben</button>` : ''}
             </div>
@@ -1412,6 +1491,7 @@ function orderCard(order){
   const completeButton = order.status === "Vergeben" && canAssignOrder(order)
     ? `<button class="btn btn-outline" data-action="complete" data-order-id="${order.id}">Als abgeschlossen markieren</button>`
     : "";
+
   const manageButtons = canAssignOrder(order)
     ? `<button class="btn btn-outline" data-action="editOrder" data-order-id="${order.id}">Auftrag bearbeiten</button><button class="btn btn-danger" data-action="deleteOrder" data-order-id="${order.id}">Auftrag löschen</button>`
     : "";
@@ -1432,7 +1512,7 @@ function orderCard(order){
 
     <div class="meta">
       <div>📍 ${escapeText(order.city)}</div>
-      <div>💶 ${Number(order.price).toLocaleString("de-DE")} €</div>
+      <div>💶 ${Number(order.price || 0).toLocaleString("de-DE")} €</div>
       <div>📦 ${escapeText(order.volume)}</div>
       <div>📅 ${escapeText(order.date)}</div>
     </div>
@@ -1464,20 +1544,38 @@ function orderCard(order){
 }
 
 function applicationCard(order){
+  const myStatus = applicationStatus(order, getChatName());
   const isAssignedToMe = normalizeName(order.assignedPartner) === normalizeName(getChatName());
+
   return `
-    <div class="application-box">
+    <div class="application-box" id="application-${order.id}">
       <div class="row">
-        <div><strong>${escapeText(order.title)}</strong><br><span class="muted tiny">${escapeText(order.city)} · Auftraggeber: ${escapeText(order.announcer)}</span></div>
+        <div>
+          <strong>${escapeText(order.title)}</strong><br>
+          <span class="muted tiny">${escapeText(order.city)} · Auftraggeber: ${escapeText(order.announcer)}</span><br>
+          <div style="margin-top:6px">${applicationStatusHtml(myStatus)}</div>
+        </div>
         <span class="badge ${statusClass(order.status)}">${escapeText(order.status)}</span>
       </div>
+
       <div style="margin-top:10px">
-        ${isAssignedToMe ? '<span class="badge" style="background:#dcfce7;color:#166534">An dich vergeben</span>' : '<span class="muted">Dein Interesse wurde an den Auftraggeber übermittelt.</span>'}
+        ${
+          isAssignedToMe
+            ? '<span class="badge" style="background:#dcfce7;color:#166534">An dich vergeben</span>'
+            : normalizeName(myStatus) === "abgelehnt"
+              ? '<span class="muted">Deine Bewerbung wurde abgelehnt.</span>'
+              : normalizeName(myStatus) === "angenommen"
+                ? '<span class="muted">Deine Bewerbung wurde angenommen.</span>'
+                : '<span class="muted">Dein Interesse wurde an den Auftraggeber übermittelt.</span>'
+        }
       </div>
+
       <div class="actions">
         <button class="btn btn-outline" data-action="profile" data-name="${encodeValue(order.announcer)}">Auftraggeber-Profil ansehen</button>
+        <button class="btn btn-outline" data-action="openOrderFromApplication" data-order-id="${order.id}">Auftrag öffnen</button>
         <button class="btn btn-outline" data-action="toggleChat" data-order-id="${order.id}">Nachricht öffnen</button>
       </div>
+
       <div class="chat-box" id="chat-${order.id}">
         <div style="font-weight:700;margin-bottom:8px">Nachrichten</div>
         <div class="chat-list" id="messages-${order.id}"></div>
@@ -1589,6 +1687,7 @@ function renderCalendar(){
           </div>
           <div style="margin-top:10px"><strong>${escapeText(a.user)}</strong></div>
           <div class="muted" style="margin-top:4px">${escapeText(a.details)}</div>
+          ${a.order_id ? `<button class="btn btn-outline" style="margin-top:10px" data-action="openOrderFromApplication" data-order-id="${escapeText(a.order_id)}">Auftrag öffnen</button>` : ""}
         </div>`).join("")}
     </div>`).join("");
 }
@@ -1702,6 +1801,7 @@ async function handleSend(orderId){
 
   const success = await sendChatMessage(orderId, sender, recipient, text);
   if(success){
+    await addActivity("Nachricht", sender, `Nachricht zum Auftrag '${order ? order.title : ""}' an ${recipient} gesendet.`, orderId);
     await createNotification(recipient, "Neue Nachricht", `${sender} hat dir eine Nachricht zum Auftrag '${order ? order.title : ""}' geschrieben.`, orderId);
     input.value = "";
     await renderOrderMessages(orderId);
@@ -1721,10 +1821,18 @@ async function expressInterest(orderId){
   order.interestedPartners = [...(order.interestedPartners || []), partnerName];
   if(order.status === "Offen") order.status = "In Verhandlung";
 
-  const { error } = await client.from("orders").update({interestedPartners:order.interestedPartners,status:order.status}).eq("id", orderId);
+  const statuses = {...(order.applicationStatuses || {})};
+  statuses[partnerName] = "Offen";
+
+  const { error } = await client.from("orders").update({
+    interestedPartners:order.interestedPartners,
+    status:order.status,
+    applicationStatuses:statuses
+  }).eq("id", orderId);
+
   if(error){
     console.error("Fehler beim Interesse:", error);
-    return alert("Interesse konnte nicht gespeichert werden.");
+    return alert("Interesse konnte nicht gespeichert werden. Bitte prüfe, ob die Spalte applicationStatuses existiert.");
   }
 
   await addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`, orderId);
@@ -1749,44 +1857,55 @@ async function setApplicationStatus(orderId, encodedName, status){
 
   if(error){
     console.error("Bewerbungsstatus konnte nicht gespeichert werden:", error);
-    return alert("Bewerbungsstatus konnte nicht gespeichert werden. Bitte prüfe den SQL-Schritt applicationStatuses.");
+    return alert("Bewerbungsstatus konnte nicht gespeichert werden. Bitte prüfe, ob die Spalte applicationStatuses existiert.");
   }
 
   const activityType = status === "Angenommen" ? "Bewerbung angenommen" : "Bewerbung abgelehnt";
-  await addActivity(activityType, order.announcer, `${partnerName} wurde für den Auftrag '${order.title}' ${status.toLowerCase()}.`, orderId);
+  await addActivity(activityType, getChatName(), `${partnerName} wurde für den Auftrag '${order.title}' ${status.toLowerCase()}.`, orderId);
   await createNotification(partnerName, activityType, `Deine Bewerbung für '${order.title}' wurde ${status.toLowerCase()}.`, orderId);
   await loadFromSupabase();
   alert("Bewerbungsstatus aktualisiert.");
 }
 
-async function editOrder(orderId){
+function openEditOrder(orderId){
   const order = state.orders.find(o => String(o.id) === String(orderId));
   if(!order) return;
   if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag bearbeiten.");
 
-  const title = prompt("Auftragstitel:", order.title);
-  if(title === null) return;
-  const city = prompt("Ort:", order.city);
-  if(city === null) return;
-  const price = prompt("Preis:", order.price);
-  if(price === null) return;
-  const volume = prompt("Auftragsvolumen:", order.volume);
-  if(volume === null) return;
-  const date = prompt("Datum im Format JJJJ-MM-TT:", order.date);
-  if(date === null) return;
-  const description = prompt("Beschreibung:", order.description);
-  if(description === null) return;
+  document.getElementById("editOrderId").value = order.id;
+  document.getElementById("editTitle").value = order.title;
+  document.getElementById("editCity").value = order.city;
+  document.getElementById("editPrice").value = order.price;
+  document.getElementById("editVolume").value = order.volume;
+  document.getElementById("editDate").value = order.date;
+  document.getElementById("editDescription").value = order.description;
+  document.getElementById("editStatus").value = order.status;
+  document.getElementById("editOrderModal").classList.add("open");
+}
+
+function closeEditOrder(){
+  document.getElementById("editOrderModal").classList.remove("open");
+}
+
+async function saveEditedOrder(){
+  const orderId = document.getElementById("editOrderId").value;
+  const order = state.orders.find(o => String(o.id) === String(orderId));
+  if(!order) return;
+  if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag bearbeiten.");
+
+  const updatedOrder = {
+    title: document.getElementById("editTitle").value.trim() || order.title,
+    city: document.getElementById("editCity").value.trim() || order.city,
+    price: Number(String(document.getElementById("editPrice").value).replace(",", ".")) || order.price,
+    volume: document.getElementById("editVolume").value.trim() || order.volume,
+    date: document.getElementById("editDate").value || order.date,
+    description: document.getElementById("editDescription").value.trim() || order.description,
+    status: document.getElementById("editStatus").value || order.status
+  };
 
   const { error } = await client
     .from("orders")
-    .update({
-      title:title.trim() || order.title,
-      city:city.trim() || order.city,
-      price:Number(String(price).replace(",", ".")) || order.price,
-      volume:volume.trim() || order.volume,
-      date:date.trim() || order.date,
-      description:description.trim() || order.description
-    })
+    .update(updatedOrder)
     .eq("id", orderId);
 
   if(error){
@@ -1794,16 +1913,18 @@ async function editOrder(orderId){
     return alert("Auftrag konnte nicht bearbeitet werden.");
   }
 
+  closeEditOrder();
   await addActivity("Auftrag bearbeitet", getChatName(), `Auftrag '${order.title}' wurde bearbeitet.`, orderId);
   await loadFromSupabase();
   alert("Auftrag aktualisiert.");
+  openOrderAndHighlight(orderId);
 }
 
 async function deleteOrder(orderId){
   const order = state.orders.find(o => String(o.id) === String(orderId));
   if(!order) return;
   if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag löschen.");
-  if(!confirm(`Auftrag '${order.title}' wirklich löschen?`)) return;
+  if(!confirm(`Auftrag '${order.title}' wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
 
   const { error } = await client
     .from("orders")
@@ -1826,13 +1947,21 @@ async function assignOrder(orderId, encodedName){
   if(!order) return;
   if(!canAssignOrder(order)) return alert("Nur der Auftragsersteller oder ein Admin darf diesen Auftrag vergeben.");
 
-  const { error } = await client.from("orders").update({assignedPartner:partnerName,status:"Vergeben"}).eq("id", orderId);
+  const statuses = {...(order.applicationStatuses || {})};
+  statuses[partnerName] = "Angenommen";
+
+  const { error } = await client.from("orders").update({
+    assignedPartner:partnerName,
+    status:"Vergeben",
+    applicationStatuses:statuses
+  }).eq("id", orderId);
+
   if(error){
     console.error("Fehler bei Vergabe:", error);
     return alert("Auftrag konnte nicht vergeben werden.");
   }
 
-  await addActivity("Vergabe", order.announcer, `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`, orderId);
+  await addActivity("Vergabe", getChatName(), `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`, orderId);
   await createNotification(partnerName, "Auftrag vergeben", `Der Auftrag '${order.title}' wurde an dich vergeben.`, orderId);
   await loadFromSupabase();
   alert("Auftrag wurde vergeben.");
@@ -1849,7 +1978,7 @@ async function completeOrder(orderId){
     return alert("Auftrag konnte nicht abgeschlossen werden.");
   }
 
-  await addActivity("Statusänderung", "System", `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`, orderId);
+  await addActivity("Statusänderung", getChatName(), `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`, orderId);
   if(order.assignedPartner){
     await createNotification(order.assignedPartner, "Auftrag abgeschlossen", `Der Auftrag '${order.title}' wurde als abgeschlossen markiert.`, orderId);
   }
@@ -1886,7 +2015,7 @@ async function createOrder(){
 
   if(error){
     console.error("Fehler beim Speichern:", error);
-    return alert("Fehler beim Speichern.");
+    return alert("Fehler beim Speichern. Bitte prüfe, ob alle Spalten in Supabase existieren.");
   }
 
   await addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
@@ -1958,7 +2087,7 @@ function render(){
 }
 
 document.addEventListener("click", function(event){
-  const btn = event.target.closest("button[data-action]");
+  const btn = event.target.closest("[data-action]");
   if(!btn) return;
 
   const action = btn.dataset.action;
@@ -1978,6 +2107,7 @@ document.addEventListener("click", function(event){
   if(action === "toggleNotifications") return toggleNotifications();
   if(action === "markNotificationsRead") return markNotificationsRead();
   if(action === "openNotification") return openNotification(btn.dataset.notificationId, btn.dataset.orderId);
+  if(action === "openOrderFromApplication") return openOrderAndHighlight(orderId);
   if(action === "messagePartner") return messageInterestedPartner(orderId, name);
   if(action === "assign") return assignOrder(orderId, name);
   if(action === "interest") return expressInterest(orderId);
@@ -1986,12 +2116,15 @@ document.addEventListener("click", function(event){
   if(action === "complete") return completeOrder(orderId);
   if(action === "acceptApplication") return setApplicationStatus(orderId, name, "Angenommen");
   if(action === "rejectApplication") return setApplicationStatus(orderId, name, "Abgelehnt");
-  if(action === "editOrder") return editOrder(orderId);
+  if(action === "editOrder") return openEditOrder(orderId);
   if(action === "deleteOrder") return deleteOrder(orderId);
+  if(action === "closeEditOrder") return closeEditOrder();
+  if(action === "saveEditedOrder") return saveEditedOrder();
 });
 
 document.addEventListener("click", function(event){
   if(event.target && event.target.id === "profileModal") closeCompanyProfile();
+  if(event.target && event.target.id === "editOrderModal") closeEditOrder();
 });
 
 document.addEventListener("click", function(event){
@@ -2010,6 +2143,7 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 document.getElementById("globalSearch").addEventListener("input", render);
 document.getElementById("orderSearch").addEventListener("input", render);
 document.getElementById("cityFilter").addEventListener("change", render);
+
 const adminSearch = document.getElementById("adminFilterSearch");
 const adminType = document.getElementById("adminFilterType");
 if(adminSearch) adminSearch.addEventListener("input", renderCalendar);
