@@ -913,9 +913,55 @@ const replyTargets = {};
 
 function getRole(){ return localStorage.getItem("role") || ""; }
 function getChatName(){ return localStorage.getItem("chatName") || ""; }
+function getUserId(){ return localStorage.getItem("userId") || ""; }
 function normalizeName(name){ return String(name || "").trim().toLowerCase(); }
 function isLoggedIn(){ return !!localStorage.getItem("chatName"); }
 function isAdmin(){ return getRole() === "Admin"; }
+
+async function loadUser(){
+  const { data: { user }, error: userError } = await client.auth.getUser();
+
+  if(userError || !user){
+    localStorage.removeItem("chatName");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    updateNameDisplay();
+    return null;
+  }
+
+  let { data: profile, error: profileError } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if(profileError){
+    console.warn("Profil konnte nicht geladen werden:", profileError);
+  }
+
+  if(!profile){
+    const fallbackName = user.email || "Partner";
+    const { data: createdProfile, error: createProfileError } = await client
+      .from("profiles")
+      .insert([{ id:user.id, name:fallbackName, role:"Partner" }])
+      .select()
+      .single();
+
+    if(createProfileError){
+      console.warn("Profil konnte nicht automatisch erstellt werden:", createProfileError);
+      profile = { id:user.id, name:fallbackName, role:"Partner" };
+    } else {
+      profile = createdProfile;
+    }
+  }
+
+  localStorage.setItem("userId", user.id);
+  localStorage.setItem("chatName", profile.name || user.email || "Partner");
+  localStorage.setItem("role", profile.role || "Partner");
+  updateNameDisplay();
+  return user;
+}
+
 function isOwnOrder(order){ return !!order && normalizeName(order.announcer) === normalizeName(getChatName()); }
 function canExpressInterest(order){ return isLoggedIn() && !!order && !isOwnOrder(order); }
 function canAssignOrder(order){ return isLoggedIn() && (isAdmin() || isOwnOrder(order)); }
@@ -944,9 +990,11 @@ function updateNameDisplay(){
   renderProfilePreview();
 }
 
-function logout(){
+async function logout(){
+  await client.auth.signOut();
   localStorage.removeItem("chatName");
   localStorage.removeItem("role");
+  localStorage.removeItem("userId");
   updateNameDisplay();
   render();
   alert("Du wurdest ausgeloggt.");
@@ -2037,40 +2085,72 @@ async function registerPartner(){
   const password = document.getElementById("regPassword").value.trim();
   const role = document.getElementById("regRole").value || "Partner";
 
-  if(!name || !email || !password) return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
-
-  const { error } = await client.from("partners").insert([{name,email,password,role}]);
-  if(error){
-    console.error("Fehler:", error);
-    return alert("Registrierung fehlgeschlagen.");
+  if(!name || !email || !password){
+    return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
   }
 
+  const { data, error } = await client.auth.signUp({
+    email,
+    password
+  });
+
+  if(error){
+    console.error("Registrierung fehlgeschlagen:", error);
+    return alert("Registrierung fehlgeschlagen: " + error.message);
+  }
+
+  if(!data.user){
+    return alert("Registrierung wurde gestartet. Bitte prüfe ggf. dein E-Mail-Postfach.");
+  }
+
+  const { error: profileError } = await client
+    .from("profiles")
+    .upsert([{ id:data.user.id, name, role }], { onConflict:"id" });
+
+  if(profileError){
+    console.error("Profil konnte nicht gespeichert werden:", profileError);
+    return alert("Registrierung erfolgreich, aber das Profil konnte nicht gespeichert werden. Bitte prüfe die Tabelle profiles.");
+  }
+
+  localStorage.setItem("userId", data.user.id);
   localStorage.setItem("chatName", name);
   localStorage.setItem("role", role);
+
   updateNameDisplay();
   await addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
+
   ["regName","regEmail","regPassword"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
   });
-  alert("Registrierung erfolgreich.");
+
+  alert("Registrierung erfolgreich. Du bist jetzt angemeldet.");
+  await loadUser();
+  await loadFromSupabase();
   showPage("dashboard");
 }
 
 async function login(){
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
-  if(!email || !password) return alert("Bitte E-Mail und Passwort eingeben.");
 
-  const { data, error } = await client.from("partners").select("*").eq("email", email).eq("password", password).single();
-  if(error || !data){
-    console.error("Login Fehler:", error);
-    return alert("Login fehlgeschlagen.");
+  if(!email || !password){
+    return alert("Bitte E-Mail und Passwort eingeben.");
   }
 
-  localStorage.setItem("chatName", data.name);
-  localStorage.setItem("role", data.role || "Partner");
-  updateNameDisplay();
+  const { error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    console.error("Login fehlgeschlagen:", error);
+    return alert("Login fehlgeschlagen: " + error.message);
+  }
+
+  await loadUser();
+  await loadFromSupabase();
+
   alert("Login erfolgreich.");
   showPage("dashboard");
 }
@@ -2149,8 +2229,10 @@ const adminType = document.getElementById("adminFilterType");
 if(adminSearch) adminSearch.addEventListener("input", renderCalendar);
 if(adminType) adminType.addEventListener("change", renderCalendar);
 
-updateNameDisplay();
-loadFromSupabase();
+(async function initApp(){
+  await loadUser();
+  await loadFromSupabase();
+})();
 </script>
 </body>
 </html>
