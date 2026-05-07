@@ -1032,10 +1032,7 @@
           <input id="regName" placeholder="Unternehmen / Ansprechpartner">
           <input id="regEmail" placeholder="E-Mail-Adresse">
           <input id="regPassword" type="password" placeholder="Passwort">
-          <select id="regRole">
-            <option value="Partner">Partner</option>
-            <option value="Admin">Admin</option>
-          </select>
+          <input value="Partner" disabled style="background:#f8fbff;color:#64748b;font-weight:700">
         </div>
         <div class="actions">
           <button class="btn btn-primary" data-action="register">Registrieren</button>
@@ -2529,7 +2526,7 @@ async function registerPartner(){
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
   const password = document.getElementById("regPassword").value.trim();
-  const role = document.getElementById("regRole").value || "Partner";
+  const role = "Partner";
 
   if(!name || !email || !password){
     return alert("Bitte Name, E-Mail und Passwort ausfüllen.");
