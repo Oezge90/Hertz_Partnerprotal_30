@@ -1086,6 +1086,20 @@ async function loadUser(){
   return user;
 }
 
+
+async function trackEvent(event, page = "", details = ""){
+  try{
+    await client.from("tracking").insert([{
+      user_id: getUserId() || null,
+      event,
+      page,
+      details: String(details || "")
+    }]);
+  }catch(e){
+    console.warn("Tracking konnte nicht gespeichert werden:", e);
+  }
+}
+
 function isOwnOrder(order){
   if(!order) return false;
 
@@ -1129,6 +1143,7 @@ async function logout(){
   localStorage.removeItem("userId");
   updateNameDisplay();
   render();
+  await trackEvent("logout", "auth");
   alert("Du wurdest ausgeloggt.");
 }
 
@@ -1354,6 +1369,7 @@ function openOrderAndHighlight(orderId){
 }
 
 async function openNotification(notificationId, orderId){
+  await trackEvent("notification_click", "notifications", orderId || notificationId || "");
   if(notificationId){
     const { error } = await client
       .from("notifications")
@@ -1403,6 +1419,8 @@ function showPage(page){
   if(target) target.classList.remove("hidden");
 
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+
+  trackEvent("page_view", page);
 
   if(page === "profile") loadProfileIntoForm();
   render();
@@ -1996,6 +2014,7 @@ async function handleSend(orderId){
   const success = await sendChatMessage(orderId, sender, recipient, text);
   if(success){
     await addActivity("Nachricht", sender, `Nachricht zum Auftrag '${order ? order.title : ""}' an ${recipient} gesendet.`, orderId);
+    await trackEvent("message_sent", "chat", orderId);
     await createNotification(recipient, "Neue Nachricht", `${sender} hat dir eine Nachricht zum Auftrag '${order ? order.title : ""}' geschrieben.`, orderId);
     input.value = "";
     await renderOrderMessages(orderId);
@@ -2030,6 +2049,7 @@ async function expressInterest(orderId){
   }
 
   await addActivity("Interesse bekundet", partnerName, `Interesse am Auftrag '${order.title}' in ${order.city} bekundet.`, orderId);
+  await trackEvent("interest", "orders", orderId);
   await createNotification(order.announcer, "Neuer Interessent", `${partnerName} hat Interesse an deinem Auftrag '${order.title}' bekundet.`, orderId);
   await loadFromSupabase();
   alert("Interesse wurde eingetragen. Der Auftragsersteller sieht dich jetzt in seiner Interessentenliste.");
@@ -2056,6 +2076,7 @@ async function setApplicationStatus(orderId, encodedName, status){
 
   const activityType = status === "Angenommen" ? "Bewerbung angenommen" : "Bewerbung abgelehnt";
   await addActivity(activityType, getChatName(), `${partnerName} wurde für den Auftrag '${order.title}' ${status.toLowerCase()}.`, orderId);
+  await trackEvent(status === "Angenommen" ? "application_accept" : "application_reject", "applications", orderId);
   await createNotification(partnerName, activityType, `Deine Bewerbung für '${order.title}' wurde ${status.toLowerCase()}.`, orderId);
   await loadFromSupabase();
   alert("Bewerbungsstatus aktualisiert.");
@@ -2109,6 +2130,7 @@ async function saveEditedOrder(){
 
   closeEditOrder();
   await addActivity("Auftrag bearbeitet", getChatName(), `Auftrag '${order.title}' wurde bearbeitet.`, orderId);
+  await trackEvent("edit_order", "orders", orderId);
   await loadFromSupabase();
   alert("Auftrag aktualisiert.");
   openOrderAndHighlight(orderId);
@@ -2131,6 +2153,7 @@ async function deleteOrder(orderId){
   }
 
   await addActivity("Auftrag gelöscht", getChatName(), `Auftrag '${order.title}' wurde gelöscht.`, orderId);
+  await trackEvent("delete_order", "orders", orderId);
   await loadFromSupabase();
   alert("Auftrag gelöscht.");
 }
@@ -2156,6 +2179,7 @@ async function assignOrder(orderId, encodedName){
   }
 
   await addActivity("Vergabe", getChatName(), `Auftrag '${order.title}' wurde an ${partnerName} vergeben.`, orderId);
+  await trackEvent("assign_order", "orders", orderId);
   await createNotification(partnerName, "Auftrag vergeben", `Der Auftrag '${order.title}' wurde an dich vergeben.`, orderId);
   await loadFromSupabase();
   alert("Auftrag wurde vergeben.");
@@ -2173,6 +2197,7 @@ async function completeOrder(orderId){
   }
 
   await addActivity("Statusänderung", getChatName(), `Status von '${order.title}' auf 'Abgeschlossen' gesetzt.`, orderId);
+  await trackEvent("complete_order", "orders", orderId);
   if(order.assignedPartner){
     await createNotification(order.assignedPartner, "Auftrag abgeschlossen", `Der Auftrag '${order.title}' wurde als abgeschlossen markiert.`, orderId);
   }
@@ -2214,6 +2239,7 @@ async function createOrder(){
   }
 
   await addActivity("Auftrag annonciert", announcer, `Neuer Auftrag '${title}' in ${city} veröffentlicht.`);
+  await trackEvent("create_order", "orders", title);
   ["newTitle","newCity","newPrice","newVolume","newDate","newDescription"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = "";
@@ -2265,6 +2291,7 @@ async function registerPartner(){
 
   updateNameDisplay();
   await addActivity("Registrierung", name, `Neuer Partner registriert (${role}).`);
+  await trackEvent("register", "auth", name);
 
   ["regName","regEmail","regPassword"].forEach(id => {
     const el = document.getElementById(id);
@@ -2297,6 +2324,7 @@ async function login(){
 
   await loadUser();
   await loadFromSupabase();
+  await trackEvent("login", "auth");
 
   alert("Login erfolgreich.");
   showPage("dashboard");
